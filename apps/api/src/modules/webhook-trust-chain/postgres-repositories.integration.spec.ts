@@ -64,6 +64,67 @@ describeIfDb("webhook postgres repositories integration", () => {
     expect(after).toBe(true);
   });
 
+  it("is idempotent for sequential replay with same eventId", async () => {
+    const repository = new PostgresProcessedWebhookRepository(pool);
+    const eventId = "evt_integration_replay_seq";
+
+    const markProcessedInOwnTransaction = async (): Promise<void> => {
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        await repository.markProcessedWithinTransaction("payos", eventId, client);
+        await client.query("COMMIT");
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    };
+
+    await markProcessedInOwnTransaction();
+    await markProcessedInOwnTransaction();
+
+    const after = await repository.hasBeenProcessed("payos", eventId);
+    const count = await pool.query(
+      "SELECT COUNT(*)::int AS count FROM payment_webhook_processed WHERE provider = $1 AND event_id = $2",
+      ["payos", eventId],
+    );
+
+    expect(after).toBe(true);
+    expect(count.rows[0].count).toBe(1);
+  });
+
+  it("does not double-apply under near-concurrency with same eventId", async () => {
+    const repository = new PostgresProcessedWebhookRepository(pool);
+    const eventId = "evt_integration_replay_concurrent";
+
+    const markProcessedInOwnTransaction = async (): Promise<void> => {
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        await repository.markProcessedWithinTransaction("payos", eventId, client);
+        await client.query("COMMIT");
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    };
+
+    await Promise.all([markProcessedInOwnTransaction(), markProcessedInOwnTransaction()]);
+
+    const after = await repository.hasBeenProcessed("payos", eventId);
+    const count = await pool.query(
+      "SELECT COUNT(*)::int AS count FROM payment_webhook_processed WHERE provider = $1 AND event_id = $2",
+      ["payos", eventId],
+    );
+
+    expect(after).toBe(true);
+    expect(count.rows[0].count).toBe(1);
+  });
+
   it("writes transaction-not-found audit log", async () => {
     const logger = new PostgresSecurityAuditLogger(pool);
 
