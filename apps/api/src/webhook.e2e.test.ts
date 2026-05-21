@@ -25,7 +25,7 @@ describe("payos webhook endpoint", () => {
       .post("/api/v1/payment/webhook/payos")
       .set("content-type", "application/json")
       .set("x-payos-signature", "signed")
-      .send({ id: eventId, type: "payment.updated", data: { orderCode: 1002 } });
+      .send({ id: eventId, type: "payment.updated", status: "PAID", data: { orderCode: 1002 } });
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ code: "00", message: "processed" });
@@ -38,13 +38,13 @@ describe("payos webhook endpoint", () => {
       .post("/api/v1/payment/webhook/payos")
       .set("content-type", "application/json")
       .set("x-payos-signature", "signed")
-      .send({ id: eventId, type: "payment.updated", data: { orderCode: 1003 } });
+      .send({ id: eventId, type: "payment.updated", status: "PAID", data: { orderCode: 1003 } });
 
     const second = await request(app)
       .post("/api/v1/payment/webhook/payos")
       .set("content-type", "application/json")
       .set("x-payos-signature", "signed")
-      .send({ id: eventId, type: "payment.updated", data: { orderCode: 1003 } });
+      .send({ id: eventId, type: "payment.updated", status: "PAID", data: { orderCode: 1003 } });
 
     expect(first.status).toBe(200);
     expect(first.body).toMatchObject({ code: "00", message: "processed" });
@@ -57,10 +57,31 @@ describe("payos webhook endpoint", () => {
       .post("/api/v1/payment/webhook/payos")
       .set("content-type", "application/json")
       .set("x-payos-signature", "signed")
-      .send({ id: `evt_${crypto.randomUUID()}`, type: "payment.updated", data: {} });
+      .send({
+        id: `evt_${crypto.randomUUID()}`,
+        type: "payment.updated",
+        status: "PAID",
+        data: {},
+      });
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ code: "00", message: "tx_not_found_audited" });
+  });
+
+  it("returns code 00 ignored_not_paid for non-paid status", async () => {
+    const res = await request(app)
+      .post("/api/v1/payment/webhook/payos")
+      .set("content-type", "application/json")
+      .set("x-payos-signature", "signed")
+      .send({
+        id: `evt_${crypto.randomUUID()}`,
+        type: "payment.updated",
+        status: "PENDING",
+        data: { orderCode: 2001 },
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ code: "00", message: "ignored_not_paid" });
   });
 
   it("returns code 02 for malformed json payload", async () => {

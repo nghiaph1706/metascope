@@ -14,6 +14,7 @@ import {
 import { enforceQuota, InMemoryQuotaStore, RedisQuotaStore } from "./modules/quota-guard";
 import {
   InMemoryPaymentTransactionRepository,
+  PostgresPaymentTransactionRepository,
   StubPayOSPaymentLinkClient,
   SubscriptionController,
   SubscriptionService,
@@ -24,6 +25,7 @@ import {
   PayOSWebhookProcessor,
   PostgresProcessedWebhookRepository,
   PostgresSecurityAuditLogger,
+  PostgresWebhookMutationExecutor,
 } from "./modules/webhook-trust-chain";
 
 const app = express();
@@ -46,7 +48,10 @@ const authProfileRepository = new InMemoryAuthProfileRepository();
 const authProfileService = new AuthProfileService(authProfileRepository);
 const authProfileController = new AuthProfileController(authProfileService);
 
-const paymentTransactionRepository = new InMemoryPaymentTransactionRepository();
+const paymentTransactionRepository =
+  !isTest && postgresPool
+    ? new PostgresPaymentTransactionRepository(postgresPool)
+    : new InMemoryPaymentTransactionRepository();
 const subscriptionService = new SubscriptionService(
   new StubPayOSPaymentLinkClient(),
   paymentTransactionRepository,
@@ -89,8 +94,18 @@ class NoopWebhookMutationExecutor {
     return fn({});
   }
 
-  public async applyEventWithinTransaction(): Promise<void> {
-    return;
+  public async applyEventWithinTransaction(event: {
+    eventType: string;
+    payload: Record<string, unknown>;
+  }): Promise<void> {
+    const status = String(
+      event.payload.status ??
+        (event.payload.data as Record<string, unknown> | undefined)?.status ??
+        "",
+    ).toUpperCase();
+    if (event.eventType.toLowerCase() !== "payment.updated" || status !== "PAID") {
+      throw new Error("event_not_paid");
+    }
   }
 }
 
@@ -102,13 +117,19 @@ const securityAuditLogger =
   !isTest && postgresPool
     ? new PostgresSecurityAuditLogger(postgresPool)
     : new ConsoleSecurityAuditLogger();
+const webhookMutationExecutor =
+  !isTest &&
+  postgresPool &&
+  paymentTransactionRepository instanceof PostgresPaymentTransactionRepository
+    ? new PostgresWebhookMutationExecutor(postgresPool, paymentTransactionRepository)
+    : new NoopWebhookMutationExecutor();
 
 const webhookController = new PayOSWebhookController(
   new PayOSSignatureVerifier(),
   new PayOSWebhookProcessor(
     processedWebhookRepository,
     securityAuditLogger,
-    new NoopWebhookMutationExecutor(),
+    webhookMutationExecutor,
   ),
 );
 

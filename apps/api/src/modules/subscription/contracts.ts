@@ -40,6 +40,27 @@ export interface PendingPaymentTransaction {
   expiresAt: string;
 }
 
+export interface PaymentTransactionRecord {
+  firebaseUid: string;
+  orderCode: number;
+  amount: number;
+  planType: SubscriptionPlanType;
+  status: "pending" | "paid";
+  paymentLinkId?: string;
+  expiresAt: string;
+}
+
+export interface PaymentLookupRepository {
+  findByOrderCodeForUpdate(
+    orderCode: number,
+    tx: unknown,
+  ): Promise<PaymentTransactionRecord | null>;
+  markPaidIfPending(
+    orderCode: number,
+    tx: unknown,
+  ): Promise<"updated" | "already_paid" | "not_found">;
+}
+
 export interface PaymentTransactionRepository {
   existsByOrderCode(orderCode: number): Promise<boolean>;
   createPending(tx: PendingPaymentTransaction): Promise<void>;
