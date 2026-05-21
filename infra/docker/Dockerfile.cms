@@ -1,0 +1,20 @@
+# syntax=docker/dockerfile:1
+
+FROM node:20-alpine AS runtime
+
+WORKDIR /app
+
+# TODO: copy package manifests and install dependencies for CMS app
+# COPY package*.json ./
+# RUN npm ci --omit=dev
+
+# TODO: copy built CMS artifacts or source depending on final runtime strategy
+# COPY . .
+
+ENV NODE_ENV=production
+ENV PORT=3100
+
+EXPOSE 3100
+
+# TODO: replace with actual CMS start command when app entrypoint is defined
+CMD ["sh", "-c", "echo 'TODO: implement CMS container entrypoint' && sleep infinity"]

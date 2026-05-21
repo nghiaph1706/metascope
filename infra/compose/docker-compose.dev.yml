@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  cms:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.cms
+    env_file:
+      - .env.dev
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
