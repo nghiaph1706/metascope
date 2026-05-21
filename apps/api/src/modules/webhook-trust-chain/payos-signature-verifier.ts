@@ -1,6 +1,9 @@
+import crypto from "node:crypto";
 import type { VerifiedWebhookEvent, WebhookSignatureVerifier } from "./contracts";
 
 export class PayOSSignatureVerifier implements WebhookSignatureVerifier {
+  public constructor(private readonly webhookSecret: string) {}
+
   public async verify(
     rawBody: string,
     signatureHeader: string | undefined,
@@ -11,6 +14,28 @@ export class PayOSSignatureVerifier implements WebhookSignatureVerifier {
 
     if (!rawBody || rawBody.trim().length === 0) {
       throw new Error("invalid_payload");
+    }
+
+    if (!this.webhookSecret || this.webhookSecret.trim().length === 0) {
+      throw new Error("invalid_signature");
+    }
+
+    const expected = crypto
+      .createHmac("sha256", this.webhookSecret)
+      .update(rawBody, "utf8")
+      .digest("hex");
+    const normalizedSignature = signatureHeader.trim().toLowerCase();
+    if (normalizedSignature.length !== expected.length) {
+      throw new Error("invalid_signature");
+    }
+
+    const isValid = crypto.timingSafeEqual(
+      Buffer.from(normalizedSignature, "utf8"),
+      Buffer.from(expected, "utf8"),
+    );
+
+    if (!isValid) {
+      throw new Error("invalid_signature");
     }
 
     const parsed = JSON.parse(rawBody) as Record<string, unknown>;
