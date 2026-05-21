@@ -12,7 +12,10 @@
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run src/modules/webhook-trust-chain/postgres-repositories.integration.spec.ts",
+    "test:integration:with-db": "bash ../../scripts/run-api-integration-with-db.sh",
+    "db:migrate": "bash ../../scripts/run-api-migrations.sh"
   },
   "dependencies": {
     "express": "^4.21.2",

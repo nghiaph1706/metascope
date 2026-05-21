@@ -6,7 +6,10 @@ export interface WebhookAckResponse {
   retry_after?: number;
 }
 
+export type WebhookProvider = "payos";
+
 export interface VerifiedWebhookEvent {
+  provider: WebhookProvider;
   eventId: string;
   eventType: string;
   transactionId?: string;
@@ -20,17 +23,15 @@ export interface WebhookSignatureVerifier {
 }
 
 export interface ProcessedWebhookRepository {
-  /**
-   * Marks webhook processed in the same DB transaction as entitlement mutation.
-   */
-  markProcessedWithinTransaction(eventId: string, tx: unknown): Promise<void>;
+  markProcessedWithinTransaction(
+    provider: WebhookProvider,
+    eventId: string,
+    tx: unknown,
+  ): Promise<void>;
 
-  hasBeenProcessed(eventId: string): Promise<boolean>;
+  hasBeenProcessed(provider: WebhookProvider, eventId: string): Promise<boolean>;
 }
 
 export interface SecurityAuditLogger {
-  /**
-   * Must be emitted when transaction lookup fails (tx-not-found) to support audit trail.
-   */
   logTransactionNotFound(event: VerifiedWebhookEvent): Promise<void>;
 }
