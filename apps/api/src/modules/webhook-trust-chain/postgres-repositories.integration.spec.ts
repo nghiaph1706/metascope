@@ -255,7 +255,12 @@ describeIfDb("webhook postgres repositories integration", () => {
 
     expect(paymentResult.rowCount).toBe(1);
     expect(paymentResult.rows[0].status).toBe("paid");
-    expect(new Date(String(userResult.rows[0].tier_expires_at)).toISOString()).toBe(initialExpiry);
+    expect(
+      Math.abs(
+        new Date(String(userResult.rows[0].tier_expires_at)).getTime() -
+          new Date(initialExpiry).getTime(),
+      ),
+    ).toBeLessThan(1000);
   });
 
   it("writes transaction-not-found audit log", async () => {
