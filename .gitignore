@@ -6,3 +6,37 @@
 !.claude/agents/**
 !.claude/commands/
 !.claude/commands/**
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+**/dist/
+**/.turbo/
+coverage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS/IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Runtime temp
+*.pid
+*.seed
+*.pid.lock
+
+# Docker overrides
+docker-compose.override.yml

@@ -1,0 +1,37 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+    command: ["pnpm", "--filter", "@metascope/api", "run", "start:prod"]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    command: ["pnpm", "--filter", "@metascope/web", "run", "start:prod"]
+    depends_on:
+      - api
+
+  cms:
+    build:
+      context: .
+      dockerfile: apps/cms/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    command: ["pnpm", "--filter", "@metascope/cms", "run", "start:prod"]
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      - NODE_ENV=production
+    command: ["pnpm", "--filter", "@metascope/worker", "run", "start:prod"]
