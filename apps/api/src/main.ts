@@ -33,12 +33,16 @@ const port = Number(process.env.PORT ?? 4000);
 const isTest = process.env.NODE_ENV === "test";
 const databaseUrl = process.env.DATABASE_URL;
 const redisUrl = process.env.REDIS_URL;
+const payosWebhookSecret = process.env.PAYOS_WEBHOOK_SECRET;
 
 if (!isTest && !databaseUrl) {
   throw new Error("DATABASE_URL is required");
 }
 if (!isTest && !redisUrl) {
   throw new Error("REDIS_URL is required");
+}
+if (!isTest && !payosWebhookSecret) {
+  throw new Error("PAYOS_WEBHOOK_SECRET is required");
 }
 
 const postgresPool = databaseUrl ? new Pool({ connectionString: databaseUrl }) : null;
@@ -125,7 +129,7 @@ const webhookMutationExecutor =
     : new NoopWebhookMutationExecutor();
 
 const webhookController = new PayOSWebhookController(
-  new PayOSSignatureVerifier(),
+  new PayOSSignatureVerifier(payosWebhookSecret ?? "test-webhook-secret"),
   new PayOSWebhookProcessor(
     processedWebhookRepository,
     securityAuditLogger,

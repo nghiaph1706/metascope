@@ -8,6 +8,24 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: metascope
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d metascope"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/metascope
+      PAYOS_WEBHOOK_SECRET: test-webhook-secret
 
     steps:
       - name: Checkout
@@ -34,3 +52,9 @@ jobs:
 
       - name: Typecheck
         run: pnpm run typecheck
+
+      - name: Run webhook unit and e2e tests
+        run: pnpm --filter @metascope/api test src/modules/webhook-trust-chain/payos-webhook-controller.test.ts src/modules/webhook-trust-chain/payos-webhook-processor.test.ts src/webhook.e2e.test.ts
+
+      - name: Run API integration tests with Postgres
+        run: pnpm run test:integration:api:with-db
