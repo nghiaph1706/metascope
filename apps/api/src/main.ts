@@ -12,6 +12,12 @@ import {
   requireEntitlement,
 } from "./modules/entitlement-guard";
 import { enforceQuota, InMemoryQuotaStore, RedisQuotaStore } from "./modules/quota-guard";
+import {
+  InMemoryPaymentTransactionRepository,
+  StubPayOSPaymentLinkClient,
+  SubscriptionController,
+  SubscriptionService,
+} from "./modules/subscription";
 
 const app = express();
 const port = Number(process.env.PORT ?? 4000);
@@ -21,8 +27,19 @@ const authProfileRepository = new InMemoryAuthProfileRepository();
 const authProfileService = new AuthProfileService(authProfileRepository);
 const authProfileController = new AuthProfileController(authProfileService);
 
-const isTest = process.env.NODE_ENV === "test";
+const paymentTransactionRepository = new InMemoryPaymentTransactionRepository();
+const subscriptionService = new SubscriptionService(
+  new StubPayOSPaymentLinkClient(),
+  paymentTransactionRepository,
+  {
+    returnUrl: process.env.PAYOS_RETURN_URL ?? "https://example.com/payment/success",
+    cancelUrl: process.env.PAYOS_CANCEL_URL ?? "https://example.com/payment/cancel",
+    expirySeconds: 15 * 60,
+  },
+);
+const subscriptionController = new SubscriptionController(subscriptionService);
 
+const isTest = process.env.NODE_ENV === "test";
 const databaseUrl = process.env.DATABASE_URL;
 const redisUrl = process.env.REDIS_URL;
 
@@ -56,6 +73,12 @@ app.post(
   authProfileController.postSyncProfile,
 );
 app.get("/api/v1/auth/me", requireAuth(authBoundary), authProfileController.getMe);
+
+app.post(
+  "/api/v1/subscription/create-payment-link",
+  requireAuth(authBoundary),
+  subscriptionController.postCreatePaymentLink,
+);
 
 app.get(
   "/api/v1/tools/premium-demo",

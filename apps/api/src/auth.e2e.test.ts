@@ -99,4 +99,32 @@ describe("auth endpoints", () => {
       remaining: 0,
     });
   });
+
+  it("creates payment link for authenticated user", async () => {
+    const firebaseUid = `uid_${crypto.randomUUID()}`;
+    const token = createToken({ sub: firebaseUid, email: "billing@example.com" });
+
+    const res = await request(app)
+      .post("/api/v1/subscription/create-payment-link")
+      .set("authorization", `Bearer ${token}`)
+      .send({ planType: "premium_monthly" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.checkoutUrl).toContain("https://pay.example/checkout/");
+    expect(typeof res.body.orderCode).toBe("number");
+    expect(res.body.amount).toBe(99000);
+    expect(typeof res.body.expiresAt).toBe("string");
+  });
+
+  it("rejects invalid payment-link payload", async () => {
+    const token = createToken({ sub: `uid_${crypto.randomUUID()}` });
+
+    const res = await request(app)
+      .post("/api/v1/subscription/create-payment-link")
+      .set("authorization", `Bearer ${token}`)
+      .send({ planType: "invalid" });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({ code: "invalid_payload" });
+  });
 });
