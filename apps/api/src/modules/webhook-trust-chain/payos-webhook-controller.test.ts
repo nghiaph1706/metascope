@@ -46,6 +46,7 @@ describe("PayOSWebhookController", () => {
 
     expect(res.statusValues.at(-1)).toBe(200);
     expect(res.body.at(-1)).toMatchObject({ code: "01", message: "invalid_signature" });
+    expect(processor.processVerifiedEvent).not.toHaveBeenCalled();
   });
 
   it("returns processor ack when event is verified", async () => {
