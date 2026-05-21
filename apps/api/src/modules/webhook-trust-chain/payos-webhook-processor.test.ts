@@ -80,6 +80,29 @@ describe("PayOSWebhookProcessor", () => {
     expect(ack).toMatchObject({ code: "00", message: "tx_not_found_audited" });
   });
 
+  it("maps user_not_found error from mutation executor to audited ack", async () => {
+    const repository: ProcessedWebhookRepository = {
+      hasBeenProcessed: vi.fn().mockResolvedValue(false),
+      markProcessedWithinTransaction: vi.fn(),
+    };
+    const auditLogger: SecurityAuditLogger = {
+      logTransactionNotFound: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const mutationExecutor: WebhookMutationExecutor = {
+      runInTransaction: async () => {
+        throw new Error("user_not_found");
+      },
+      applyEventWithinTransaction: vi.fn(),
+    };
+
+    const processor = new PayOSWebhookProcessor(repository, auditLogger, mutationExecutor);
+    const ack = await processor.processVerifiedEvent(baseEvent);
+
+    expect(auditLogger.logTransactionNotFound).toHaveBeenCalledTimes(1);
+    expect(ack).toMatchObject({ code: "00", message: "tx_not_found_audited" });
+  });
+
   it("maps non-paid webhook to ignored ack", async () => {
     const repository: ProcessedWebhookRepository = {
       hasBeenProcessed: vi.fn().mockResolvedValue(false),
