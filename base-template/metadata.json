@@ -1,0 +1,6 @@
+{
+  "name": "MetaScope",
+  "description": "Premium TFT analytical companion & creator intelligence platform: featuring real-time tier lists, match tracing, guide crafting, positioning boards, and performance analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

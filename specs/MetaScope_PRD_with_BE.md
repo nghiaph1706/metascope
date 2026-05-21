@@ -8,13 +8,13 @@ Dưới đây là chi tiết toàn bộ cách thức hoạt động của các t
 
 ## 1. Hệ Thống Xác Thực & Tài Khoản (Authentication Flow)
 
-Hệ thống yêu cầu người dùng phải đăng ký/đăng nhập để truy cập vào các tính năng cá nhân hóa và các công cụ AI.
+Hệ thống yêu cầu người dùng phải đăng ký/đăng nhập để truy cập vào các tính năng cá nhân hóa và các công cụ AI. Authentication source of truth là Firebase UID; email/ingame_name chỉ là thuộc tính hồ sơ.
 
 ### Luồng Đăng Nhập / Đăng Ký:
-- **Truy cập:** Người dùng chưa đăng nhập nhấn vào "Trang cá nhân" hoặc truy cập các route bị khóa (vd: AI Coach, Predictor) sẽ bị điều hướng về màn hình Đăng kí/Đăng nhập (`/auth_view`).
+- **Truy cập:** Người dùng chưa đăng nhập nhấn vào "Trang cá nhân" hoặc truy cập các route bị khóa (vd: AI Coach, Predictor) sẽ bị điều hướng về màn hình Đăng kí/Đăng nhập (`/auth`).
 - **Giao diện:** Form điền thông tin (Email, Mật khẩu, Tên Ingame) với thiết kế hiện đại, có toggle chuyển đổi giữa Đăng Nhập và Đăng Ký.
 - **Xử lý:** Sau khi xác thực thành công, hệ thống lưu trạng thái đăng nhập (được cấp một bậc `userTier` mặc định là `basic`) và điều hướng người dùng quay lại trang chủ hoặc trang họ đang muốn truy cập.
-- **Đăng xuất:** Nút đăng xuất nằm trong màn hình Quản lý Tài Khoản (`/user_profile`), xóa phiên đăng nhập và đưa người dùng về trạng thái Khách.
+- **Đăng xuất:** Nút đăng xuất nằm trong màn hình Quản lý Tài Khoản (`/user/profile`), xóa phiên đăng nhập và đưa người dùng về trạng thái Khách.
 
 ### Quản Lý Tài Khoản (User Profile):
 - Hiển thị thông tin cá nhân cơ bản, hạng gói cước hiện tại (Basic / Premium).
@@ -28,26 +28,30 @@ Hệ thống được chia làm 3 tầng trải nghiệm. Các tính năng chuy�
 
 ### 2.1. Gói Khách Vãng Lai (Guest / Unauthenticated)
 Dành cho người chưa đăng nhập.
-- **Được truy cập:** Trang chủ, Thư Viện Meta (Tier List & Chi tiết đội hình), Tham khảo Tỉ Lệ Roll, Cách ghép trang bị, Xem bảng xếp hạng, Xem Patch Notes.
-- **Bị chặn:** Mọi tính năng tra cứu lịch sử đấu cá nhân, phân tích AI, công cụ xây dựng đội hình.
+- **Được truy cập:** Trang chủ, Thư Viện Meta (Tier List & Chi tiết đội hình), Champion/Traits/Items, Tỉ lệ Roll, Patch Notes.
+- **Bị chặn:** Player stats, Creator Hub, toàn bộ AI tools.
 
 ### 2.2. Gói Tuyển Thủ (Basic - Miễn phí khi có tài khoản)
 Dành cho người dùng đã đăng ký tài khoản nhưng chưa nâng cấp thanh toán.
 - **Bao gồm:** Tất cả quyền hạn của Guest.
-- **Công cụ cá nhân:** Được phép tạo giáo án riêng (Create Guide) và lưu tại Creator Hub. Xem lịch sử đấu của bản thân và đối thủ ở mức cơ bản.
-- **Công cụ nâng cao (Bị giới hạn):**
-  - **Phân Tích AI Hậu Kỳ:** Chỉ 1 lần/tuần.
-  - **Dự Đoán Elo (MMR Predictor):** Chỉ dùng thử 3 lần/tuần.
-- **Bị chặn hoàn toàn:** Huấn luyện viên AI chuyên sâu (Matchup Coach).
+- **Công cụ cá nhân:** Được phép tạo/sửa/xóa guide cá nhân trong Creator Hub.
+- **Player Stats:** Được truy cập đầy đủ các endpoint `/player/*`.
+- **Công cụ AI (giới hạn):**
+  - **Phân Tích AI Hậu Kỳ:** 2 lần/tuần.
+  - **Dự Đoán Elo (MMR Predictor):** 5 lần/tuần.
+- **Bị chặn hoàn toàn:** Matchup Coach.
 
 ### 2.3. Gói Tinh Anh (Premium / Pro)
-Dành cho người dùng trả phí hàng tháng. Mở khóa toàn bộ khả năng tính toán của server.
+Dành cho người dùng trả phí hàng tháng.
 - **Bao gồm:** Tất cả quyền hạn của Basic.
+- **Giá:** 99,000 VNĐ/tháng.
 - **Đặc quyền Mở khóa:**
-  - **Huấn Luyện AI (Matchup Coach):** Sử dụng không giới hạn thuật toán chỉ ra điểm yếu và cách xếp bài khắc chế đối thủ.
-  - **Dự Đoán Elo & MMR:** Mở khóa không giới hạn. Xem được ma trận phân tích LP chi tiết.
-  - **Phân Tích AI Hậu Kỳ:** Chỉ tiêu 2 trận / ngày hoặc không giới hạn nhánh phân tích sâu.
-  - **Chỉ số nâng cao:** Truy cập vào dữ liệu lõi đặc quyền của các tướng/tộc hệ tỷ lệ thắng cao nhất.
+  - **Huấn Luyện AI (Matchup Coach):** Mở khóa đầy đủ.
+  - **Dự Đoán Elo & MMR:** Không giới hạn (fair-use).
+  - **Phân Tích AI Hậu Kỳ:** 3 lần/ngày.
+  - **Ưu tiên xử lý AI queue:** Ưu tiên request Premium so với Basic.
+
+> Nguồn sự thật entitlement/quota duy nhất nằm tại Section 5.5 (Plan Entitlement Matrix + Quota Rules).
 
 ---
 
@@ -95,7 +99,7 @@ Yêu cầu đăng nhập. Bị kiểm soát bởi hệ thống Quota của gói 
     * **Kết quả:** Cung cấp Thẻ Điểm (Report Card) gồm các điểm số như: Kinh tế (B+), Flex trang bị (C-), Tối ưu Lõi (A). Ghi chú rõ lý do: "Bạn đã giữ quá nhiều tiền ở round 4-2, dẫn đến mất máu oan", "Lõi X không phù hợp với carry Y".
 
 * **Tra Cứu Lịch Sử Đấu (Player Stats):**
-    * **Flow:** Nhập ID summoner -> Chuyển đến trang Profile tổng quan. Hiển thị Biểu đồ leo rank dạng Spline Chart tiến trình lịch sử, liệt kê 20 match gần nhất, chi tiết đơn vị và thứ hạng.
+    * **Flow:** Nhập Riot ID chuẩn `gameName#tagLine` + chọn `region` -> Chuyển đến trang Profile tổng quan. Hiển thị Biểu đồ leo rank dạng Spline Chart tiến trình lịch sử, liệt kê 20 match gần nhất, chi tiết đơn vị và thứ hạng.
 
 > ### **[UPDATE] Quyết định Kiến trúc: Loại Bỏ Tính Năng "Live Tracker"**
 > 
@@ -113,7 +117,7 @@ Tính năng Web App giữ chân người dùng (Retention). Yêu cầu đăng nh
 
 * **Tạo Giáo Án Cá Nhân (Create Guide):**
     * **Hoạt động:** Cung cấp Canvas/Bord để người dùng tự do thêm Tướng lên bàn cờ, nhét trang bị, chọn Lõi.
-    * **Flow:** Điền Tên Giáo án -> Thêm mô tả chiến thuật -> Xếp tướng -> Ấn Lưu Váp (Save Draft).
+    * **Flow:** Điền Tên Giáo án -> Thêm mô tả chiến thuật -> Xếp tướng -> Ấn Lưu Nháp (Save Draft).
 * **Creator Hub:**
     * **Hoạt động:** Nơi chứa các giáo án đã tạo. Có chức năng Edit, Xóa, Nhân Bản. Trực quan hóa dưới dạng các thẻ (Card). Sau này có thể tích hợp chức năng tính tiền cho Creator nếu giáo án được mua (Tùy chọn tương lai).
 
@@ -223,11 +227,28 @@ Sử dụng **PostgreSQL** cho relational data. **Redis** cho cache và quota tr
 -- Người dùng hệ thống
 users (
   id UUID PRIMARY KEY,
+  firebase_uid VARCHAR UNIQUE NOT NULL,
   email VARCHAR UNIQUE NOT NULL,
-  password_hash VARCHAR NOT NULL,
   ingame_name VARCHAR,
+  is_banned BOOLEAN DEFAULT FALSE,
+  banned_reason TEXT,
+  banned_at TIMESTAMP,
   tier VARCHAR DEFAULT 'basic',         -- 'basic' | 'premium'
   tier_expires_at TIMESTAMP,            -- NULL nếu basic (không hết hạn)
+  created_at TIMESTAMP DEFAULT NOW()
+)
+
+-- Nhật ký entitlement để audit/payment reconciliation
+entitlement_ledger (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  source VARCHAR NOT NULL,              -- 'payos_webhook' | 'admin_manual' | 'system'
+  action VARCHAR NOT NULL,              -- 'grant' | 'extend' | 'downgrade' | 'revoke'
+  tier_before VARCHAR,
+  tier_after VARCHAR,
+  expires_before TIMESTAMP,
+  expires_after TIMESTAMP,
+  reference_id VARCHAR,                 -- order_code / admin_ticket_id
   created_at TIMESTAMP DEFAULT NOW()
 )
 
@@ -255,6 +276,10 @@ meta_snapshots (
   comp_units JSONB,                     -- [{unit_id, items[], star}]
   best_augments JSONB,                  -- [{augment_id, win_rate}]
   positioning JSONB,                    -- [{unit_id, hex_position}]
+  status VARCHAR DEFAULT 'draft',       -- 'draft' | 'live'
+  approved BOOLEAN DEFAULT FALSE,
+  approved_by UUID REFERENCES users(id),
+  approved_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW()
 )
 
@@ -290,6 +315,27 @@ match_cache (
   fetched_at TIMESTAMP DEFAULT NOW()
 )
 
+-- Bảng counter cho Matchup Coach theo patch
+comp_counters (
+  id UUID PRIMARY KEY,
+  patch_version VARCHAR NOT NULL,
+  comp_id VARCHAR NOT NULL,
+  enemy_comp_id VARCHAR NOT NULL,
+  result VARCHAR NOT NULL,              -- 'win' | 'lose' | 'neutral'
+  notes TEXT,
+  updated_by UUID REFERENCES users(id),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(patch_version, comp_id, enemy_comp_id)
+)
+
+-- Idempotency log cho webhook payment
+processed_webhooks (
+  id UUID PRIMARY KEY,
+  provider VARCHAR NOT NULL,            -- 'payos'
+  event_key VARCHAR UNIQUE NOT NULL,
+  received_at TIMESTAMP DEFAULT NOW()
+)
+
 ```
 
 #### Redis keys:
@@ -297,7 +343,7 @@ match_cache (
 ```
 quota:{user_id}:{feature}:{YYYY-WW}     → integer (weekly count), TTL 8 ngày
 quota:{user_id}:{feature}:{YYYY-MM-DD}  → integer (daily count), TTL 2 ngày
-session:{session_token}                 → user_id, TTL = session duration
+session_revoked_after:{user_id}         → unix timestamp, TTL = 30 ngày
 riot_summoner:{region}:{summonerName}   → PUUID JSON, TTL 1 giờ
 meta:current_patch                      → patch_version string, TTL 1 giờ
 
@@ -307,14 +353,13 @@ meta:current_patch                      → patch_version string, TTL 1 giờ
 
 ### 5.4. API Endpoints (Backend REST)
 
-Tất cả endpoint đều có prefix `/api/v1`. Auth dùng JWT Bearer token trong header.
+Tất cả endpoint đều có prefix `/api/v1`. Authentication dùng Firebase ID token (Bearer) verify qua Firebase Admin SDK; backend không phát hành JWT nội bộ.
 
 #### Auth:
 
 ```
-POST /api/v1/auth/register      body: {email, password, ingame_name}
-POST /api/v1/auth/login         body: {email, password} → {token, user}
-POST /api/v1/auth/logout        header: Bearer token
+POST /api/v1/auth/sync-profile  body: {ingame_name} (optional) → upsert user profile theo firebase_uid
+POST /api/v1/auth/logout        header: Bearer token (thu hồi refresh token + set session_revoked_after)
 GET  /api/v1/auth/me            → {user object với tier}
 
 ```
@@ -330,16 +375,24 @@ GET /api/v1/meta/traits                          → danh sách tộc hệ + win
 GET /api/v1/meta/items                           → item matrix (recipe + completed items)
 GET /api/v1/meta/roll-odds                       → bảng tỉ lệ theo level (static)
 GET /api/v1/meta/patch-notes                     → danh sách patch notes
+GET /api/v1/meta/patch-notes/:version            → chi tiết 1 patch note theo version
 
 ```
 
 #### Player (Cần auth — Basic trở lên):
 
 ```
-GET  /api/v1/player/:riotId/profile             → rank, LP, tier hiện tại
-GET  /api/v1/player/:riotId/matches?page=1      → 20 match gần nhất, có pagination
-GET  /api/v1/player/:riotId/matches/:matchId    → chi tiết 1 trận
-GET  /api/v1/player/:riotId/lp-history          → lịch sử LP dạng time-series cho chart
+GET  /api/v1/player/:riotId/profile?region=sea             → rank, LP, tier hiện tại
+GET  /api/v1/player/:riotId/matches?page=1&region=sea      → 20 match gần nhất, có pagination
+GET  /api/v1/player/:riotId/matches/:matchId?region=sea    → chi tiết 1 trận
+GET  /api/v1/player/:riotId/lp-history?region=sea          → lịch sử LP dạng time-series cho chart
+
+Rate limiting riêng cho nhóm `/player/*`:
+- per-user: 60 req/10 phút
+- per-IP: 120 req/10 phút
+- khi vượt ngưỡng trả 429 + `retry_after`.
+
+Trong đó canonical Riot ID ở domain model là `gameName#tagLine` (UTF-8 NFC). Route param dùng percent-encoding URL-safe khi truyền qua URL, không đổi ký tự `#` thành `-` trong domain model.
 
 ```
 
@@ -347,16 +400,21 @@ GET  /api/v1/player/:riotId/lp-history          → lịch sử LP dạng time-s
 
 ```
 POST /api/v1/tools/elo-predictor
+     header: Idempotency-Key (UUIDv4, bắt buộc)
      body: {current_rank, current_lp, target_rank, recent_placements[]}
-     quota: basic=3/week, premium=unlimited
+     quota: basic=5/week, premium=unlimited (fair-use)
 
 POST /api/v1/tools/post-game-analysis
+     header: Idempotency-Key (UUIDv4, bắt buộc)
      body: {match_id} hoặc {riot_id} (lấy match mới nhất)
-     quota: basic=1/week, premium=2/day
+     quota: basic=2/week, premium=3/day
 
 POST /api/v1/tools/matchup-coach
+     header: Idempotency-Key (UUIDv4, bắt buộc)
      body: {enemy_comp_id}
      quota: basic=BLOCKED, premium=unlimited
+
+Idempotency contract: TTL key 24 giờ; cùng key + cùng payload trả kết quả cũ; cùng key + khác payload trả 409.
 
 ```
 
@@ -375,38 +433,65 @@ POST   /api/v1/guides/:guideId/duplicate
 #### Subscription (Cần auth):
 
 ```
-POST /api/v1/subscription/upgrade    → (hiện tại giả lập) set tier=premium
-POST /api/v1/subscription/downgrade  → set tier=basic
-GET  /api/v1/subscription/status     → {tier, expires_at, usage_this_period}
+POST /api/v1/subscription/create-payment-link  → tạo checkoutUrl PayOS cho premium_monthly
+GET  /api/v1/subscription/status               → {tier, expires_at, usage_this_period}
+GET  /api/v1/subscription/transactions         → lịch sử thanh toán của user
+
+```
+
+#### Webhooks (System callback):
+
+```
+POST /api/v1/webhooks/payos                    → nhận callback thanh toán từ PayOS
 
 ```
 
 ---
 
-### 5.5. Hệ Thống Quota (Server-Side Enforcement)
+### 5.5. Plan Entitlement Matrix & Quota Enforcement (Server-Side)
 
-> **Quan trọng:** Quota PHẢI được validate ở server, không phải chỉ ẩn/hiện ở frontend. Client không được tin tưởng.
+> **Quan trọng:** Entitlement/quota PHẢI validate ở server. Đây là nguồn sự thật duy nhất cho toàn bộ plan.
 
-**Middleware `checkQuota(feature, period)**` chạy trước mọi endpoint có giới hạn:
+#### 5.5.1 Plan Entitlement Matrix (Single Source of Truth)
+
+| Feature | Guest | Basic | Premium |
+| --- | --- | --- | --- |
+| Meta library (comps/champions/traits/items/roll-odds/patch notes) | ✅ | ✅ | ✅ |
+| Player stats (`/player/*`) | ❌ | ✅ | ✅ |
+| Creator Hub (guide cá nhân) | ❌ | ✅ | ✅ |
+| Elo Predictor | ❌ | 5/tuần | Unlimited (fair-use soft-limit) |
+| Post-Game Analysis | ❌ | 2/tuần | 3/ngày (hard cap) |
+| Matchup Coach | ❌ | ❌ | Unlimited (fair-use soft-limit) |
+| AI queue priority | ❌ | Standard | Priority |
+
+#### 5.5.2 Quota Rules & Middleware
+
+**Middleware `checkQuota(feature, period)`** chạy trước mọi endpoint có giới hạn:
 
 ```
-1. Đọc userTier từ JWT
-2. Nếu premium → skip quota check, cho qua
-3. Nếu basic:
-   a. Tính period_start (đầu tuần ISO hoặc ngày hiện tại theo UTC)
-   b. Query usage_quotas: SELECT count WHERE user_id AND feature AND period_start
-   c. So sánh với limit config:
-      - post_game_analysis / weekly: limit = 1
-      - elo_predictor / weekly:      limit = 3
-      - matchup_coach:               limit = 0 (block hoàn toàn)
-   d. Nếu count >= limit → trả về 429 { error: "QUOTA_EXCEEDED", reset_at: ... }
-   e. Nếu còn quota → tăng count, cho request đi tiếp
-4. Sau khi request thành công → INCREMENT count trong Redis (atomic)
-   Đồng thời upsert vào bảng usage_quotas để persist
-
+1. Verify Firebase token, lấy user_id từ DB theo firebase_uid
+2. Check entitlement: nếu tier='premium' nhưng tier_expires_at < NOW() thì reject premium feature ngay
+3. Xác định limit theo matrix:
+   - post_game_analysis: basic=2/week, premium=3/day
+   - elo_predictor:      basic=5/week, premium=unlimited (fair-use)
+   - matchup_coach:      basic=0, premium=unlimited
+4. Tính period_start (đầu tuần ISO UTC hoặc ngày UTC)
+5. Chạy Redis atomic script: check current count + increment trong một thao tác
+6. Nếu vượt limit → trả về 429 { error: "QUOTA_EXCEEDED", reset_at: ... }
+7. Nếu giữ slot thành công → cho request xử lý
+8. Sau khi request thành công → upsert usage_quotas để persist
+9. Nếu request fail do lỗi hệ thống sau khi đã giữ slot quota → ghi compensation record và rollback quota theo idempotency key
+10. Mọi request có retry phải có idempotency key để tránh trừ quota lặp khi mạng lỗi/timeout
 ```
 
 **Reset logic:** Period `weekly` tính từ thứ Hai đầu tuần theo UTC (ISO week). Không reset lúc nửa đêm theo giờ địa phương để tránh timezone bug.
+
+**Hiển thị UI:** Frontend hiển thị `reset_at` theo local timezone của user nhưng phải ghi rõ nhãn “quota tính theo UTC” để tránh hiểu nhầm.
+
+**Fair-use cho Premium (AI tools):**
+- Elo Predictor: soft-limit 120 requests/ngày/user.
+- Matchup Coach: soft-limit 60 requests/ngày/user.
+- Có anti-automation + rate-limit theo IP/user; vượt soft-limit trả 429 và reset theo UTC 00:00.
 
 ---
 
@@ -512,6 +597,179 @@ Input: match_id
 
 ---
 
+### 5.6.1. Kiến Trúc Dữ Liệu Polyglot (PostgreSQL + Redis + OpenSearch)
+
+**Mục tiêu:** Giữ tính đúng đắn dữ liệu bằng PostgreSQL, giảm tải query nặng bằng OpenSearch (phase rollout), và tối ưu hot path bằng Redis.
+
+**Phân vai dữ liệu:**
+
+- **PostgreSQL (source of truth):** users, payment_transactions, entitlement_ledger, usage_quotas, guides, meta_snapshots, champion_stats, comp_counters.
+- **Redis (hot cache/counter):** quota counters, session revoke markers, Riot short cache, LLM cache.
+- **OpenSearch (read model):** dữ liệu phục vụ search/filter/sort nặng cho web.
+
+**Index OpenSearch đề xuất:**
+
+1. `meta_comps_v1`
+   - Trường chính: `patch_version`, `comp_id`, `comp_name`, `tier`, `traits`, `win_rate`, `pick_rate`, `avg_placement`, `sample_size`
+   - Use case: filter theo patch/tier/traits, sort theo win_rate/pick_rate.
+
+2. `champion_stats_v1`
+   - Trường chính: `patch_version`, `champion_id`, `champion_name`, `win_rate`, `pick_rate`, `avg_placement`, `best_items`
+   - Use case: bảng champion stats sort/filter tốc độ cao.
+
+3. `patch_notes_v1`
+   - Trường chính: `version`, `title`, `content`, `highlights`, `publishedAt`
+   - Use case: full-text search patch notes.
+
+4. `public_guides_v1` (optional)
+   - Trường chính: `guide_id`, `title`, `description`, `traits`, `units`, `created_at`
+   - Use case: tìm guide public nhanh theo từ khóa/tộc hệ.
+
+**Luồng đồng bộ PostgreSQL → OpenSearch:**
+
+- Mọi thay đổi dữ liệu liên quan search tạo event sync (`upsert`/`delete`) qua queue (BullMQ).
+- Worker sync đọc event và ghi OpenSearch bằng idempotent key (`entity_type:entity_id:version`).
+- Lỗi sync áp dụng exponential backoff; quá ngưỡng retry đẩy vào dead-letter queue.
+- Có cron `nightly_reindex` để đối soát và rebuild index từ PostgreSQL khi cần.
+
+**Nguyên tắc vận hành:**
+
+- API nghiệp vụ quan trọng (auth, quota, payment) không phụ thuộc OpenSearch.
+- Khi OpenSearch lỗi, endpoint search trả degraded response hoặc fallback query nhẹ từ PostgreSQL.
+- Mapping index được version hóa (`*_v1`, `*_v2`) để reindex không downtime.
+
+### 5.6.2. OpenSearch Index Mapping Tối Thiểu (v1)
+
+**Quy ước chung:**
+
+- Tên index vật lý có version: `metascope_meta_comps_v1`, `metascope_champion_stats_v1`, `metascope_patch_notes_v1`, `metascope_public_guides_v1`.
+- API chỉ query qua alias ổn định: `metascope_meta_comps_current`, `metascope_champion_stats_current`, `metascope_patch_notes_current`, `metascope_public_guides_current`.
+- Khi nâng mapping: tạo `*_v2` -> reindex -> swap alias atomically.
+- Cấm query trực tiếp physical index trong code ứng dụng production.
+
+**Settings baseline (áp dụng cho mọi index):**
+
+```json
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "refresh_interval": "5s"
+  }
+}
+```
+
+> Với mô hình 1 VPS, mặc định shard=1, replica=0 để tiết kiệm tài nguyên. Khi scale nhiều node mới tăng replicas.
+
+#### A) `meta_comps_v1`
+
+```json
+{
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "id": { "type": "keyword" },
+      "patch_version": { "type": "keyword" },
+      "comp_id": { "type": "keyword" },
+      "comp_name": {
+        "type": "text",
+        "fields": { "keyword": { "type": "keyword" } }
+      },
+      "tier": { "type": "keyword" },
+      "traits": { "type": "keyword" },
+      "win_rate": { "type": "float" },
+      "pick_rate": { "type": "float" },
+      "avg_placement": { "type": "float" },
+      "sample_size": { "type": "integer" },
+      "updated_at": { "type": "date" }
+    }
+  }
+}
+```
+
+Use case: filter theo `patch_version`, `tier`, `traits`; sort theo `win_rate`, `pick_rate`.
+
+#### B) `champion_stats_v1`
+
+```json
+{
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "id": { "type": "keyword" },
+      "patch_version": { "type": "keyword" },
+      "champion_id": { "type": "keyword" },
+      "champion_name": {
+        "type": "text",
+        "fields": { "keyword": { "type": "keyword" } }
+      },
+      "win_rate": { "type": "float" },
+      "pick_rate": { "type": "float" },
+      "avg_placement": { "type": "float" },
+      "sample_size": { "type": "integer" },
+      "best_items": { "type": "keyword" },
+      "best_traits": { "type": "keyword" },
+      "updated_at": { "type": "date" }
+    }
+  }
+}
+```
+
+Use case: data table champion, filter/sort nhanh theo chỉ số.
+
+#### C) `patch_notes_v1`
+
+```json
+{
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "id": { "type": "keyword" },
+      "version": { "type": "keyword" },
+      "title": {
+        "type": "text",
+        "fields": { "keyword": { "type": "keyword" } }
+      },
+      "content": { "type": "text" },
+      "highlights": { "type": "text" },
+      "is_published": { "type": "boolean" },
+      "published_at": { "type": "date" }
+    }
+  }
+}
+```
+
+Use case: full-text search patch notes theo từ khóa phiên bản/nội dung.
+
+#### D) `public_guides_v1` (optional)
+
+```json
+{
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "guide_id": { "type": "keyword" },
+      "title": {
+        "type": "text",
+        "fields": { "keyword": { "type": "keyword" } }
+      },
+      "description": { "type": "text" },
+      "traits": { "type": "keyword" },
+      "units": { "type": "keyword" },
+      "created_at": { "type": "date" }
+    }
+  }
+}
+```
+
+Use case: search guide public theo từ khóa + traits/units.
+
+**Chuẩn truy vấn API (để tránh query nặng):**
+
+- Bắt buộc pagination (`from/size` hoặc `search_after`), `size` tối đa 50.
+- Chỉ cho phép sort theo whitelist fields (win_rate, pick_rate, avg_placement, published_at).
+- Không dùng wildcard đầu chuỗi trên field text ở production.
+
 ### 5.7. Cấu Trúc Thư Mục Backend (Đề Xuất)
 
 ```
@@ -527,7 +785,7 @@ Input: match_id
       checkQuota.ts      -- Quota enforcement middleware
       rateLimiter.ts     -- Global IP-based rate limit (chống abuse)
     /modules
-      /auth              -- register, login, logout controllers
+      /auth              -- sync-profile, logout, me controllers
       /meta              -- serve tier list, champion stats từ DB
       /player            -- profile, match history (proxy Riot API + cache)
       /tools
@@ -557,12 +815,14 @@ Input: match_id
 
 1. **Không bao giờ gọi Riot API từ client.** Mọi request phải đi qua BE server để giữ API key bí mật và tập trung rate limit.
 2. **Quota enforce ở server, không phải frontend.** Frontend có thể ẩn button, nhưng server phải trả 429 khi vượt quota. Không tin tưởng bất kỳ giá trị nào từ client về tier hay usage count.
-3. **JWT không lưu quota hay usage.** JWT chỉ chứa `{user_id, tier, exp}`. Quota luôn được query từ Redis/DB mỗi request.
+3. **Token không lưu quota hay usage.** Firebase token chỉ dùng để xác thực danh tính; entitlement (`tier`, `tier_expires_at`) và quota luôn đọc từ Redis/DB mỗi request.
 4. **Tier downgrade phải atomic.** Khi subscription hết hạn (tier_expires_at < NOW()), mọi request premium phải bị reject ngay, không cần cron job chủ động downgrade. Middleware auth check `tier_expires_at` mỗi lần.
-5. **Match data luôn cache lại.** Sau khi fetch từ Riot API, lưu vào `match_cache`. Nếu đã có trong cache, không gọi API lại. TTL không cần thiết vì match data không thay đổi sau khi game kết thúc.
+5. **Match data luôn cache lại và phải có retention TTL theo Riot ToS.** Sau khi fetch từ Riot API, lưu vào `match_cache`; khi hit cache thì không gọi API lại. TTL/retention được cấu hình bằng biến môi trường để tuân thủ policy hiện hành.
 6. **LLM response cache theo pattern, không theo user.** Response của matchup-coach cho cùng 1 enemy_comp trong cùng 1 patch là như nhau cho mọi user. Cache ở server-side Redis, không phải per-user.
 7. **Aggregate data phải có patch_version.** Không bao giờ overwrite meta data cũ. Lưu theo snapshot để có thể rollback và so sánh.
-8. **KHÔNG IMPLEMENT Live Tracker.** Tính năng quét sảnh trực tiếp đã bị loại bỏ vì là "sát thủ rate limit". Mỗi lần quét tốn 7 Riot API calls đồng thời. Với giới hạn Rate Limit khắt khe của Riot, điều này sẽ làm cạn kiệt Quota, gây lỗi HTTP 429 và làm sập chéo (bottleneck) các tính năng cốt lõi quan trọng khác. Việc gỡ bỏ giúp tối ưu tài nguyên và đảm bảo High Availability.
+8. **OpenSearch chỉ là read model, không phải source of truth.** Dữ liệu nghiệp vụ chuẩn nằm ở PostgreSQL; nếu lệch dữ liệu search thì rebuild index từ PostgreSQL.
+9. **Sync PostgreSQL → OpenSearch phải async + idempotent.** Dùng queue job theo event upsert/delete, có retry/backoff và dead-letter queue.
+10. **KHÔNG IMPLEMENT Live Tracker.** Tính năng quét sảnh trực tiếp đã bị loại bỏ vì là "sát thủ rate limit". Mỗi lần quét tốn 7 Riot API calls đồng thời. Với giới hạn Rate Limit khắt khe của Riot, điều này sẽ làm cạn kiệt Quota, gây lỗi HTTP 429 và làm sập chéo (bottleneck) các tính năng cốt lõi quan trọng khác. Việc gỡ bỏ giúp tối ưu tài nguyên và đảm bảo High Availability.
 
 ---
 
@@ -582,9 +842,10 @@ Input: match_id
 | Client state | Zustand | Nhẹ, đủ dùng cho auth state + UI state |
 | Routing (FE) | TanStack Router | Type-safe params, tích hợp tốt với TanStack Query |
 | Backend | NestJS + TypeScript | Structure rõ ràng (module/controller/service/guard), built-in DI |
-| Authentication | Firebase Auth | Setup nhanh, hỗ trợ Google login, JWT verify qua Firebase Admin SDK |
-| Database | Supabase (PostgreSQL) | SQL đầy đủ cho aggregate query, tự generate TypeScript types |
-| Cache + Queue | Upstash Redis + BullMQ | Managed Redis, quota tracking, job queue cho crawler |
+| Authentication | Firebase Auth | Setup nhanh, hỗ trợ Google login, JWT verify qua Firebase Admin SDK (sync-profile phải xử lý trường hợp provider không trả email bằng fallback UID-based profile) |
+| Database (Source of Truth) | Supabase (PostgreSQL) | ACID cho dữ liệu nghiệp vụ/transaction, tự generate TypeScript types |
+| Cache + Queue | Upstash Redis + BullMQ | Managed Redis, quota tracking, hot cache, job queue cho crawler/sync |
+| Search / Read-heavy queries | OpenSearch | Phục vụ truy vấn/filter/search nặng cho meta data, không dùng làm transactional DB. Code chỉ query alias `metascope_*_current`. |
 | Monorepo | Turborepo | Share types giữa FE/BE, build cache tự động |
 | CMS content | Payload CMS | TypeScript native, self-hosted trên Supabase, admin UI tự generate |
 | Admin panel | React Admin | Build admin UI nhanh, connect thẳng Supabase REST |
@@ -603,14 +864,14 @@ Tailwind CSS            ← utility-first styling
 Shadcn/ui               ← component base (copy vào project, không lock-in)
 Recharts                ← LP history chart, win rate visualization
 Firebase SDK (client)   ← Auth (login, register, Google OAuth)
-Supabase JS client      ← query DB trực tiếp cho public data (tier list, patch notes)
+NestJS API client       ← mọi dữ liệu nghiệp vụ/public đều đi qua /api/v1 để thống nhất auth, cache, observability
 
 ```
 
 **Nguyên tắc data fetching:**
 
-* Public data (tier list, champion stats, patch notes) → Supabase JS client gọi thẳng từ FE, không cần qua NestJS API (giảm latency)
-* Protected data + quota-sensitive (tools AI, player stats) → bắt buộc qua NestJS API để enforce auth và quota
+* Public data (tier list, champion stats, patch notes) → gọi qua NestJS API `/api/v1/meta/*` để thống nhất cache/versioning/monitoring
+* Protected data + quota-sensitive (tools AI, player stats) → bắt buộc qua NestJS API để enforce auth, entitlement và quota
 
 ---
 
@@ -657,11 +918,17 @@ Firebase
   ├── Authentication (email/password + Google OAuth)
   └── Custom Claims: { role: 'admin' | 'analyst' | 'editor' | 'user' }
 
-Upstash Redis (managed, serverless)
+Redis (TCP-compatible với BullMQ; ưu tiên Redis service chạy cùng VPS hoặc managed TCP)
   ├── Quota counters (daily + weekly)
   ├── LLM response cache (matchup coach theo patch)
   ├── Riot API response cache (summoner lookup, 1h TTL)
   └── BullMQ job queue backend
+
+OpenSearch
+  ├── index `meta_comps` (tier list/query theo patch, tier, traits, comp)
+  ├── index `champion_stats` (search/sort/filter theo win_rate, pick_rate)
+  ├── index `patch_notes` (full-text search)
+  └── (optional) index `public_guides` cho guide public
 
 Cloudflare R2 (hoặc Firebase Storage)
   └── Static game assets: icon tướng, splash art, icon tộc hệ từ CommunityDragon
@@ -800,8 +1067,8 @@ access: {
 ```
 Editor viết Patch Note trong Payload CMS
   → Payload lưu vào Supabase (bảng patch_notes)
-  → FE gọi Supabase JS client trực tiếp: supabase.from('patch_notes').select()
-  → Hiển thị trang Patch Notes (không cần qua NestJS API)
+  → FE gọi NestJS API: GET /api/v1/meta/patch-notes
+  → API đọc DB + cache rồi trả về cho FE
 
 ```
 
@@ -926,11 +1193,13 @@ await firebaseAdmin.auth().setCustomUserClaims(uid, { role: 'analyst' })
 | `/patch-notes` | Patch Notes | Guest | Danh sách |
 | `/patch-notes/:version` | Chi tiết Patch | Guest | Rich text từ CMS |
 | `/pricing` | Nâng cấp Premium | Guest | Bảng so sánh + CTA |
+| `/payment/success` | Thanh toán thành công | Basic | Hiển thị trạng thái chờ webhook xác nhận |
+| `/payment/cancel` | Thanh toán bị hủy | Guest/Basic | Cho phép tạo link thanh toán lại |
 | `/player/:riotId` | Hồ sơ người chơi | Basic | Profile + LP chart |
 | `/player/:riotId/matches` | Lịch sử đấu | Basic | 20 match gần nhất |
-| `/player/:riotId/matches/:matchId` | Chi tiết trận | Basic | [placeholder] |
+| `/player/:riotId/matches/:matchId` | Chi tiết trận | Basic | Trả về board state theo round, items, augments, placement, damage timeline |
 | `/tools/elo-predictor` | Dự đoán Elo | Basic | Form + kết quả |
-| `/tools/post-game` | Phân tích hậu kỳ | Basic | Nhập match ID |
+| `/tools/post-game-analysis` | Phân tích hậu kỳ | Basic | Nhập match ID hoặc Riot ID |
 | `/tools/matchup-coach` | Matchup Coach | Premium | Bị chặn với Basic |
 | `/guides` | Creator Hub | Basic | Danh sách guide của user |
 | `/guides/create` | Tạo giáo án | Basic | Canvas editor |
@@ -958,7 +1227,7 @@ Payload tự generate routes tại `/admin/*`. Không cần định nghĩa thêm
 
 ## 9. Môi Trường & Deployment
 
-> Placeholder — chi tiết sẽ được quyết định sau. Developer không được hardcode bất kỳ giá trị nào thuộc danh sách này vào source code.
+> Các giá trị môi trường dưới đây là chuẩn triển khai production hiện tại. Developer không được hardcode các giá trị bí mật vào source code.
 
 ### 9.1. Biến Môi Trường (Environment Variables)
 
@@ -970,6 +1239,7 @@ Tất cả env vars phải được lưu trong secret manager (không commit lê
 # Riot Games
 RIOT_API_KEY=                        # Production key từ Riot Developer Portal
 RIOT_API_REGION=                     # vd: sea, na1, euw1
+RIOT_MATCH_CACHE_RETENTION_DAYS=30    # Mặc định 30 ngày, điều chỉnh theo Riot policy hiện hành
 
 # Firebase Admin
 FIREBASE_PROJECT_ID=
@@ -980,13 +1250,24 @@ FIREBASE_PRIVATE_KEY=
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=           # Server-side only, không expose ra client
 
-# Upstash Redis
+# Redis TCP-compatible (bắt buộc cho BullMQ)
+REDIS_TCP_HOST=
+REDIS_TCP_PORT=6379
+REDIS_TCP_PASSWORD=
+
+# Upstash REST (optional, chỉ dùng cho cache REST nếu cần)
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
 
+# OpenSearch
+OPENSEARCH_NODE=
+OPENSEARCH_USERNAME=
+OPENSEARCH_PASSWORD=
+OPENSEARCH_INDEX_PREFIX=metascope
+
 # LLM
-LLM_API_KEY=                         # [placeholder — provider TBD]
-LLM_MODEL=                           # vd: claude-sonnet-4-6
+LLM_API_KEY=                         # API key provider LLM (bắt buộc)
+LLM_MODEL=claude-sonnet-4-6          # model mặc định production
 
 # PayOS
 PAYOS_CLIENT_ID=
@@ -1041,45 +1322,49 @@ FIREBASE_PRIVATE_KEY=
 
 ### 9.2. Hosting & Deployment
 
-> [Placeholder — quyết định sau khi có budget và team size]
+> Toàn bộ hệ thống deploy trên **01 VPS** duy nhất. Các ứng dụng chạy dạng process/container riêng, reverse proxy bằng Nginx.
 
-| App | Hosting đề xuất | Ghi chú |
+| App | Hosting triển khai | Ghi chú |
 | --- | --- | --- |
-| `web` | [TBD] | Vercel hoặc Cloudflare Pages |
-| `api` | [TBD] | Railway, Render, hoặc VPS |
-| `worker` | [TBD] | Cần persistent process, không dùng serverless |
-| `cms` | [TBD] | Cùng host với `api` hoặc riêng |
-| `admin` | [TBD] | Có thể deploy tĩnh trên Vercel |
+| `web` | VPS (Nginx + static build hoặc Node serve) | domain: metascope.gg |
+| `api` | VPS | domain: api.metascope.gg |
+| `worker` | VPS | chạy persistent bằng systemd/pm2, giới hạn concurrency để không ảnh hưởng API realtime |
+| `cms` | VPS | domain: cms.metascope.gg |
+| `admin` | VPS | domain: admin.metascope.gg |
+| `opensearch` | VPS | chạy node OpenSearch local, bind private network/internal only |
+
+**Baseline tài nguyên VPS (production):** tối thiểu 8 vCPU, 16GB RAM, 200GB SSD, Ubuntu LTS; tách process bằng systemd/pm2 và đặt CPU/memory limits cho worker/monitoring.
 
 ### 9.3. CI/CD Pipeline
 
-> [Placeholder — chi tiết TBD]
+> CI/CD được chuẩn hóa cho mô hình 1 VPS.
 
-* Nhánh `main` → auto deploy production
-* Nhánh `develop` → auto deploy staging
-* PR phải pass type-check + lint trước khi merge
-* Tool: [TBD — GitHub Actions hoặc tương đương]
+* Nhánh `main` → auto deploy production lên VPS
+* Nhánh `develop` → auto deploy staging (cùng VPS, namespace riêng)
+* PR phải pass type-check + lint + test trước khi merge
+* Tool: GitHub Actions + SSH deploy (hoặc self-hosted runner trên VPS)
 
 ### 9.4. Monitoring & Alerting
 
-> [Placeholder — chi tiết TBD]
+> Monitoring & alerting cho production trên 1 VPS.
 
-| Mục | Tool đề xuất | Ghi chú |
+| Mục | Tool áp dụng | Ghi chú |
 | --- | --- | --- |
-| Error tracking | [TBD] | Sentry hoặc tương đương |
-| Uptime monitoring | [TBD] | — |
-| Performance | [TBD] | — |
-| Log aggregation | [TBD] | — |
-| Crawler alert | [TBD] | Notify khi job fail liên tiếp |
+| Error tracking | Sentry | Track exception FE/BE |
+| Uptime monitoring | Uptime Kuma | Healthcheck web/api/cms/admin |
+| Performance | Grafana + Prometheus | Metrics API latency, CPU/RAM, queue depth |
+| Log aggregation | Loki + Promtail | Centralized logs từ app + Nginx |
+| Search monitoring | OpenSearch Dashboards | Theo dõi query latency, shard health, indexing failures |
+| Crawler alert | Alertmanager + Telegram/Email | Cảnh báo khi job fail liên tiếp |
 
 ### 9.5. Backup & Disaster Recovery
 
-> [Placeholder — chi tiết TBD]
+> Backup & disaster recovery cho production.
 
-* Supabase auto-backup: [TBD — tần suất, retention]
-* RTO (Recovery Time Objective): [TBD]
-* RPO (Recovery Point Objective): [TBD]
-* Quy trình restore nếu aggregate data bị corrupt: [TBD]
+* Supabase auto-backup: daily snapshot, retention 14 ngày
+* RTO (Recovery Time Objective): 4 giờ
+* RPO (Recovery Point Objective): 24 giờ
+* Quy trình restore nếu aggregate data bị corrupt: restore DB từ snapshot gần nhất, re-run incremental crawler + aggregator để tái đồng bộ dữ liệu meta
 
 ---
 
@@ -1089,15 +1374,13 @@ FIREBASE_PRIVATE_KEY=
 
 ### 10.1. Thông Tin Gói Cước
 
-> [Placeholder — giá và điều kiện cụ thể TBD]
-
 | Thông tin | Giá trị |
 | --- | --- |
 | Tên gói | Premium / Tinh Anh |
-| Giá tháng | [TBD] VNĐ/tháng |
+| Giá tháng | 99,000 VNĐ/tháng |
 | Chu kỳ billing | Hàng tháng |
-| Trial period | [TBD — có hay không] |
-| Hoàn tiền | [TBD] |
+| Trial period | Không áp dụng |
+| Hoàn tiền | Hoàn tiền trong 24 giờ nếu giao dịch thành công nhưng entitlement Premium không được cấp đúng do lỗi hệ thống |
 
 ### 10.2. Luồng Thanh Toán (Payment Flow)
 
@@ -1107,7 +1390,8 @@ PayOS hoạt động theo mô hình tạo link thanh toán một lần — khôn
 1. User click "Nâng cấp Premium" trên /pricing
 
 2. FE gọi POST /api/v1/subscription/create-payment-link
-   body: { userId, planType: 'premium_monthly' }
+   body: { planType: 'premium_monthly' }
+   (user_id được suy ra từ Bearer token đã verify ở backend)
 
 3. NestJS tạo payment link qua PayOS API:
    POST [https://api-merchant.payos.vn/v2/payment-requests](https://api-merchant.payos.vn/v2/payment-requests)
@@ -1163,7 +1447,10 @@ async handlePayOSWebhook(body: PayOSWebhookDto) {
   if (!tx) return { code: '00', desc: 'acknowledged' } // idempotent
 
   // Bước 4: Idempotency check — tránh xử lý 2 lần nếu webhook gửi lại
-  if (tx.status === 'completed') return { code: '00', desc: 'already processed' }
+  const eventKey = `payos:${body.data.orderCode}`
+  const duplicate = await db.processed_webhooks.findOne({ event_key: eventKey })
+  if (duplicate || tx.status === 'completed') return { code: '00', desc: 'already processed' }
+  await db.processed_webhooks.insert({ provider: 'payos', event_key: eventKey })
 
   // Bước 5: Cập nhật transaction + nâng cấp user tier (atomic)
   await db.transaction(async (trx) => {
@@ -1171,16 +1458,29 @@ async handlePayOSWebhook(body: PayOSWebhookDto) {
       { order_code: body.data.orderCode },
       { status: 'completed', paid_at: body.data.transactionDateTime }
     )
+    const user = await trx.users.findOne({ id: tx.user_id })
+    const now = new Date()
+    const base = user.tier_expires_at && user.tier_expires_at > now ? user.tier_expires_at : now
     await trx.users.update(
       { id: tx.user_id },
       {
         tier: 'premium',
-        tier_expires_at: addMonths(new Date(), 1)
+        tier_expires_at: addMonths(base, 1)
       }
     )
+    await trx.entitlement_ledger.insert({
+      user_id: tx.user_id,
+      source: 'payos_webhook',
+      action: user.tier === 'premium' ? 'extend' : 'grant',
+      tier_before: user.tier,
+      tier_after: 'premium',
+      expires_before: user.tier_expires_at,
+      expires_after: addMonths(base, 1),
+      reference_id: String(body.data.orderCode)
+    })
   })
 
-  // Bước 6: [TBD] Gửi email xác nhận thanh toán
+  // Bước 6: Gửi email xác nhận thanh toán thành công cho user
 
   return { code: '00', desc: 'success' }
 }
@@ -1231,18 +1531,16 @@ payment_transactions (
 
 ### 10.5. Gia Hạn & Downgrade
 
-> [Placeholder — flow chi tiết TBD]
-
 * **Gia hạn:** User phải chủ động vào `/user/subscription` và tạo link thanh toán mới. Không có auto-recurring.
-* **Nhắc gia hạn:** [TBD — email 3 ngày trước khi hết hạn, hoặc banner trong app]
+* **Nhắc gia hạn:** Gửi email + in-app banner trước 3 ngày khi hết hạn, nhắc lại vào ngày hết hạn.
 * **Downgrade khi hết hạn:** Middleware check `tier_expires_at < NOW()` mỗi request — tự động reject Premium features, không cần cron job.
-* **Hoàn tiền:** [TBD — policy cụ thể]
+* **Hoàn tiền:** Chỉ áp dụng khi giao dịch thành công nhưng entitlement không được cấp đúng do lỗi hệ thống; thời hạn yêu cầu hoàn tiền trong 24 giờ.
 
 ### 10.6. Quy Tắc PayOS
 
 1. `orderCode` phải là số nguyên dương, unique toàn hệ thống. Dùng `Date.now()` hoặc sequence DB.
 2. `description` tối đa 25 ký tự — nếu quá sẽ bị PayOS từ chối.
-3. Webhook endpoint phải trả HTTP 200 trong mọi trường hợp (kể cả lỗi) — chỉ thay đổi `code` trong body. PayOS sẽ retry nếu không nhận được 200.
+3. Webhook endpoint trả HTTP 200 cho các trường hợp đã xử lý/đã ghi nhận; với lỗi hạ tầng tạm thời cần retry theo contract PayOS hiện hành (không ACK giả thành công khi chưa ghi nhận được transaction).
 4. Verify signature TRƯỚC KHI xử lý bất kỳ logic nào. Không verify = có thể bị giả mạo webhook.
 5. Không cấp Premium dựa trên `returnUrl` — chỉ dựa vào webhook đã verify.
 
@@ -1250,18 +1548,16 @@ payment_transactions (
 
 ## 11. Bảo Mật (Security)
 
-> [Placeholder — chi tiết và giá trị cụ thể TBD. Đây là checklist tối thiểu cần implement trước khi go-live.]
-
 ### 11.1. API Security
 
 | Hạng mục | Trạng thái | Ghi chú |
 | --- | --- | --- |
-| HTTPS bắt buộc toàn bộ | [TBD] | Redirect HTTP → HTTPS |
-| CORS policy | [TBD] | Chỉ cho phép origin từ metascope.gg |
-| Helmet headers | [TBD] | CSP, X-Frame-Options, HSTS... |
-| IP rate limit | [TBD] | [X] req/min per IP — giá trị TBD |
-| Request size limit | [TBD] | Giới hạn body size để chặn DoS |
-| PayOS webhook IP whitelist | [TBD] | Chỉ nhận từ IP của PayOS |
+| HTTPS bắt buộc toàn bộ | Bắt buộc | Redirect HTTP → HTTPS |
+| CORS policy | Bật | Chỉ cho phép origin từ `https://metascope.gg`, `https://admin.metascope.gg`, `https://cms.metascope.gg` |
+| Helmet headers | Bật | CSP, X-Frame-Options, HSTS |
+| IP rate limit | Bật | 120 req/phút/IP cho API public; endpoint auth áp dụng ngưỡng riêng |
+| Request size limit | Bật | Giới hạn body 1MB cho API mặc định |
+| PayOS webhook IP whitelist | Bật khi PayOS cung cấp dải IP chính thức | Luôn verify signature trước khi xử lý |
 
 ### 11.2. Database Security (Supabase RLS)
 
@@ -1270,9 +1566,9 @@ Row Level Security phải được bật cho các bảng sau:
 | Bảng | Policy | Ghi chú |
 | --- | --- | --- |
 | `users` | User chỉ đọc/sửa row của chính mình | Admin bypass qua service role key |
-| `guides` | Owner có full quyền; public chỉ đọc guide có `is_public=true` | [TBD] |
+| `guides` | Owner có full quyền; public chỉ đọc guide có `is_public=true` | Update/Delete chỉ owner hoặc admin |
 | `usage_quotas` | User chỉ đọc quota của mình, không được sửa | Chỉ service role mới ghi |
-| `payment_transactions` | User chỉ đọc transaction của mình | [TBD] |
+| `payment_transactions` | User chỉ đọc transaction của mình | Không cho insert/update/delete từ client |
 | `meta_snapshots` | Public read; chỉ service role mới write | — |
 
 ### 11.3. Input Validation
@@ -1286,30 +1582,26 @@ Row Level Security phải được bật cho các bảng sau:
 
 ### 11.4. Abuse Prevention
 
-> [Placeholder — giá trị cụ thể TBD]
-
 | Biện pháp | Chi tiết |
 | --- | --- |
-| Register rate limit | [TBD] lần/IP/giờ |
-| Login rate limit | [TBD] lần/IP/phút |
-| Captcha khi register | [TBD — có hay không] |
-| Account sharing Premium | [TBD — policy xử lý] |
-| Suspicious usage alert | [TBD — ngưỡng trigger alert] |
+| Register rate limit | 5 lần/IP/giờ |
+| Login rate limit | 10 lần/IP/15 phút |
+| Captcha khi register | Bật khi vượt ngưỡng rate limit hoặc phát hiện IP rủi ro |
+| Account sharing Premium | Cho phép tối đa 2 thiết bị active/24h; vượt ngưỡng thì yêu cầu xác minh lại |
+| Suspicious usage alert | Cảnh báo khi cùng tài khoản đăng nhập từ >3 IP khác nhau trong 1 giờ |
 
 ---
 
 ## 12. Testing Strategy
 
-> [Placeholder — coverage target và tooling cụ thể TBD. Đây là định hướng tối thiểu.]
-
 ### 12.1. Phân Loại Test
 
 | Loại | Tool | Coverage target | Ưu tiên |
 | --- | --- | --- | --- |
-| Unit test | [TBD] | [TBD]% | Cao — đặc biệt cho heuristic algorithms |
-| Integration test | [TBD] | [TBD]% | Cao — Riot API wrapper, quota flow |
-| E2E test | [TBD] | Các happy path chính | Trung bình |
-| Load test | [TBD] | — | Thấp — sau MVP |
+| Unit test | Vitest | >= 80% statements cho domain services | Cao — đặc biệt cho heuristic algorithms |
+| Integration test | Jest + Supertest | >= 70% cho API critical paths | Cao — Riot API wrapper, quota flow |
+| E2E test | Playwright | Các happy path chính | Trung bình |
+| Load test | k6 | Smoke load test cho API trọng yếu trước mỗi release lớn | Thấp — sau MVP |
 
 ### 12.2. Các Case Bắt Buộc Phải Test
 
@@ -1328,7 +1620,7 @@ Row Level Security phải được bật cho các bảng sau:
 
 ### 12.3. Test Environment
 
-> [Placeholder — TBD]
+Môi trường test tách biệt production, dùng sandbox credentials và dữ liệu staging.
 
 * Cần tài khoản PayOS sandbox để test payment flow
 * Riot API dev key cho test environment
@@ -1338,7 +1630,7 @@ Row Level Security phải được bật cho các bảng sau:
 
 ## 13. Pháp Lý & Compliance
 
-> [Placeholder — nội dung cụ thể cần tư vấn pháp lý trước khi go-live.]
+Các yêu cầu pháp lý dưới đây là checklist bắt buộc hoàn tất trước khi go-live.
 
 ### 13.1. Riot Games ToS Compliance
 
@@ -1350,14 +1642,14 @@ MetaScope sử dụng Riot Games API và phải tuân thủ [Riot Games Develope
 
 **Các điều khoản cần tuân thủ:**
 
-* Không cache match data quá [TBD — kiểm tra policy hiện tại] ngày
+* Không cache match data quá `RIOT_MATCH_CACHE_RETENTION_DAYS` (giá trị cấu hình theo Riot policy hiện hành)
 * Không dùng data để train AI model thương mại
 * Hiển thị rõ data source khi trình bày thống kê
-* [TBD — review đầy đủ Riot ToS trước launch]
+* Hoàn tất legal review Riot ToS trước launch và lưu version policy đã kiểm tra trong runbook vận hành
 
 ### 13.2. Chính Sách Bảo Mật & Điều Khoản Dịch Vụ
 
-> [Placeholder — cần soạn thảo trước khi thu thập email và xử lý thanh toán]
+Privacy Policy và Terms of Service phải được publish công khai trước khi mở đăng ký tài khoản và thanh toán.
 
 **Privacy Policy phải đề cập:**
 
@@ -1366,7 +1658,7 @@ MetaScope sử dụng Riot Games API và phải tuân thủ [Riot Games Develope
 * Thời gian lưu trữ
 * Quyền của người dùng (xóa tài khoản, export data)
 * Cookie policy
-* [TBD — soạn thảo đầy đủ]
+* Nội dung chính thức phải được legal review và version hóa theo ngày hiệu lực
 
 **Terms of Service phải đề cập:**
 
@@ -1374,11 +1666,9 @@ MetaScope sử dụng Riot Games API và phải tuân thủ [Riot Games Develope
 * Chính sách hoàn tiền
 * Điều khoản chấm dứt tài khoản (ban policy)
 * Giới hạn trách nhiệm
-* [TBD — soạn thảo đầy đủ]
+* Nội dung chính thức phải được legal review và version hóa theo ngày hiệu lực
 
 ### 13.3. Tuổi Người Dùng
 
-> [Placeholder — TBD]
-
-* Riot Games yêu cầu người dùng từ [TBD] tuổi trở lên
-* MetaScope có cần cổng xác minh tuổi không: [TBD]
+* MetaScope áp dụng độ tuổi tối thiểu 13+ theo thông lệ nền tảng game online.
+* Không bắt buộc cổng xác minh tuổi ở MVP; bổ sung age gate nếu có yêu cầu pháp lý theo thị trường triển khai.
