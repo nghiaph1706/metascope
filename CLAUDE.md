@@ -24,7 +24,7 @@ Mô hình vận hành:
 ## 2) Sources of Truth
 
 Nguồn sự thật chức năng:
-- Primary PRD: `specs/MetaScope_PRD_with_BE.md`.
+- Primary PRD: `specs/README.md` (đã được chia nhỏ thành các file).
 - Quyết định/chỉnh sửa bổ sung hiện có: `notes.html`.
 
 Nguồn sự thật vận hành nội bộ:
@@ -181,8 +181,8 @@ Recommended flows:
 - Workflow dài/remote: dùng bộ `work-status` / `request-decision` / `log-progress`.
 
 Ví dụ lệnh:
-- `/spec-review-full specs/MetaScope_PRD_with_BE.md`
-- `/plan-from-spec specs/MetaScope_PRD_with_BE.md`
+- `/spec-review-full specs/README.md`
+- `/plan-from-spec specs/README.md`
 - `/design-task <task-scope>`
 - `/execute-task-full <approved-scope>`
 - `/work-status`
@@ -191,7 +191,7 @@ Ví dụ lệnh:
 
 ---
 
-## 8) Async / Telegram Workflow
+## 8) Async
 
 Project hỗ trợ điều phối công việc dài và theo dõi từ xa qua Channels.
 
