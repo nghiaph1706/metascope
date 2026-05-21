@@ -16,11 +16,17 @@ export function enforceQuota(quotaStore: QuotaStore, featureKey: string, policy:
       return;
     }
 
+    const idempotencyHeader = req.headers["idempotency-key"];
+    const idempotencyKey = Array.isArray(idempotencyHeader)
+      ? idempotencyHeader[0]
+      : idempotencyHeader;
+
     const result = await quotaStore.consume({
       firebaseUid: req.principal.firebaseUid,
       featureKey,
       policy,
       now: new Date(),
+      idempotencyKey: idempotencyKey?.trim() || undefined,
     });
 
     if (!result.allowed) {

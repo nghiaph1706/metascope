@@ -16,5 +16,6 @@ export interface QuotaStore {
     featureKey: string;
     policy: QuotaPolicy;
     now: Date;
+    idempotencyKey?: string;
   }): Promise<QuotaConsumeResult>;
 }
