@@ -5,8 +5,27 @@ services:
       dockerfile: apps/api/Dockerfile
     environment:
       - PORT=4000
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/metascope
+      - REDIS_URL=redis://redis:6379
     ports:
       - "4000:4000"
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=metascope
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
 
   web:
     build:
