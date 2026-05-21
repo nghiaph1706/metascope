@@ -1,0 +1,8 @@
+# Ignore local Claude configuration by default
+.claude/*
+
+# Keep shared team assets tracked
+!.claude/agents/
+!.claude/agents/**
+!.claude/commands/
+!.claude/commands/**
