@@ -13,6 +13,9 @@
     "format": "pnpm -r --if-present run format",
     "format:check": "pnpm -r --if-present run format:check",
     "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck",
+    "db:migrate:api": "pnpm --filter @metascope/api run db:migrate",
+    "test:integration:api": "pnpm --filter @metascope/api run test:integration",
+    "test:integration:api:with-db": "pnpm --filter @metascope/api run test:integration:with-db",
     "prepare": "husky"
   },
   "devDependencies": {

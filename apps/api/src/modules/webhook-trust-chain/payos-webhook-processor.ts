@@ -6,8 +6,8 @@ import type {
 } from "./contracts";
 
 export interface WebhookMutationExecutor {
-  /** Runs entitlement mutation + processed mark atomically in one DB transaction. */
   runInTransaction<T>(fn: (tx: unknown) => Promise<T>): Promise<T>;
+  applyEventWithinTransaction?(event: VerifiedWebhookEvent, tx: unknown): Promise<void>;
 }
 
 export class PayOSWebhookProcessor {
@@ -18,10 +18,30 @@ export class PayOSWebhookProcessor {
   ) {}
 
   public async processVerifiedEvent(event: VerifiedWebhookEvent): Promise<WebhookAckResponse> {
-    // TODO: Check idempotency by eventId and short-circuit duplicate event.
-    // TODO: If tx-not-found, emit security/audit event and map to stable ack response.
-    // TODO: Run entitlement mutation and markProcessedWithinTransaction in same DB transaction.
-    void event;
-    throw new Error("TODO: implement PayOSWebhookProcessor.processVerifiedEvent");
+    const isProcessed = await this.processedWebhookRepository.hasBeenProcessed(
+      event.provider,
+      event.eventId,
+    );
+    if (isProcessed) {
+      return { code: "00", message: "duplicate" };
+    }
+
+    if (!event.transactionId) {
+      await this.securityAuditLogger.logTransactionNotFound(event);
+      return { code: "00", message: "tx_not_found_audited" };
+    }
+
+    await this.mutationExecutor.runInTransaction(async (tx) => {
+      if (this.mutationExecutor.applyEventWithinTransaction) {
+        await this.mutationExecutor.applyEventWithinTransaction(event, tx);
+      }
+      await this.processedWebhookRepository.markProcessedWithinTransaction(
+        event.provider,
+        event.eventId,
+        tx,
+      );
+    });
+
+    return { code: "00", message: "processed" };
   }
 }

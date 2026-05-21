@@ -8,25 +8,47 @@ export class PayOSWebhookController {
     private readonly webhookProcessor: PayOSWebhookProcessor,
   ) {}
 
-  /**
-   * Contract: always returns HTTP 200 for invalid signature with ack code=01.
-   */
   public async handleWebhook(
-    req: HttpRequestLike & { rawBody?: string },
+    req: HttpRequestLike & { rawBody?: string; body?: unknown },
     res: HttpResponseLike,
   ): Promise<void> {
-    // TODO: Read signature header + raw body.
-    // TODO: On invalid signature, respond HTTP 200 with { code: '01', message: ... }.
-    // TODO: On verified event, delegate to processor and return stable ack payload.
-    void req;
-    void res;
-    throw new Error("TODO: implement PayOSWebhookController.handleWebhook");
+    try {
+      const signatureHeader = this.readHeader(req.headers, "x-payos-signature");
+      const rawBody = req.rawBody ?? JSON.stringify(req.body ?? {});
+      const verifiedEvent = await this.signatureVerifier.verify(rawBody, signatureHeader);
+      const ack = await this.webhookProcessor.processVerifiedEvent(verifiedEvent);
+      this.sendAck(res, ack);
+      return;
+    } catch (error) {
+      if (error instanceof Error && error.message === "invalid_signature") {
+        this.sendAck(res, { code: "01", message: "invalid_signature" });
+        return;
+      }
+      this.sendAck(res, { code: "02", message: "accepted_not_applied", retry_after: 30 });
+    }
   }
 
   protected sendAck(res: HttpResponseLike, ack: WebhookAckResponse): void {
-    // TODO: Normalize ack response transport. Keep retry_after in seconds when present.
-    void res;
-    void ack;
-    throw new Error("TODO: implement PayOSWebhookController.sendAck");
+    const payload: WebhookAckResponse = {
+      code: ack.code,
+      message: ack.message,
+    };
+
+    if (typeof ack.retry_after === "number") {
+      payload.retry_after = ack.retry_after;
+    }
+
+    res.status(200).json(payload);
+  }
+
+  private readHeader(
+    headers: Record<string, string | string[] | undefined>,
+    key: string,
+  ): string | undefined {
+    const value = headers[key] ?? headers[key.toLowerCase()];
+    if (Array.isArray(value)) {
+      return value[0];
+    }
+    return value;
   }
 }
