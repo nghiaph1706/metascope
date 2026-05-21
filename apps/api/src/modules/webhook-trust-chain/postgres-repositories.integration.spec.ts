@@ -2,6 +2,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Pool } from "pg";
 import { PostgresProcessedWebhookRepository } from "./postgres-processed-webhook-repository";
 import { PostgresSecurityAuditLogger } from "./postgres-security-audit-logger";
+import { PostgresWebhookMutationExecutor } from "./postgres-webhook-mutation-executor";
+import { PostgresPaymentTransactionRepository } from "../subscription/postgres-payment-transaction-repository";
 import type { VerifiedWebhookEvent } from "./contracts";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -35,11 +37,39 @@ describeIfDb("webhook postgres repositories integration", () => {
       )
     `);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        firebase_uid TEXT PRIMARY KEY,
+        tier TEXT NOT NULL DEFAULT 'free',
+        tier_expires_at TIMESTAMPTZ
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS payment_transactions (
+        id BIGSERIAL PRIMARY KEY,
+        firebase_uid TEXT NOT NULL,
+        order_code BIGINT NOT NULL UNIQUE,
+        amount INTEGER NOT NULL,
+        plan_type TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('pending', 'paid')),
+        payment_link_id TEXT,
+        expires_at TIMESTAMPTZ NOT NULL,
+        paid_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await pool.query("DELETE FROM payment_transactions");
+    await pool.query("DELETE FROM users");
     await pool.query("DELETE FROM payment_webhook_processed");
     await pool.query("DELETE FROM payment_webhook_audit_log");
   });
 
   afterAll(async () => {
+    await pool.query("DELETE FROM payment_transactions");
+    await pool.query("DELETE FROM users");
     await pool.query("DELETE FROM payment_webhook_processed");
     await pool.query("DELETE FROM payment_webhook_audit_log");
     await pool.end();
@@ -123,6 +153,109 @@ describeIfDb("webhook postgres repositories integration", () => {
 
     expect(after).toBe(true);
     expect(count.rows[0].count).toBe(1);
+  });
+
+  it("applies paid mutation once and extends user tier from now", async () => {
+    const paymentRepository = new PostgresPaymentTransactionRepository(pool);
+    const executor = new PostgresWebhookMutationExecutor(pool, paymentRepository);
+
+    const firebaseUid = "uid_integration_paid_1";
+    const orderCode = 770001;
+
+    await pool.query(
+      `INSERT INTO users(firebase_uid, tier, tier_expires_at) VALUES ($1, 'free', NULL)`,
+      [firebaseUid],
+    );
+    await pool.query(
+      `INSERT INTO payment_transactions(firebase_uid, order_code, amount, plan_type, status, expires_at)
+       VALUES ($1, $2, $3, $4, 'pending', NOW() + INTERVAL '15 minutes')`,
+      [firebaseUid, orderCode, 99000, "premium_monthly"],
+    );
+
+    const beforeMutation = new Date();
+    await executor.runInTransaction((tx) =>
+      executor.applyEventWithinTransaction(
+        {
+          provider: "payos",
+          eventId: "evt_paid_mutation_once",
+          eventType: "payment.updated",
+          transactionId: String(orderCode),
+          rawBody: "{}",
+          payload: { status: "PAID", data: { orderCode } },
+        },
+        tx,
+      ),
+    );
+    const afterMutation = new Date();
+
+    const paymentResult = await pool.query(
+      `SELECT status, paid_at FROM payment_transactions WHERE order_code = $1 LIMIT 1`,
+      [orderCode],
+    );
+    const userResult = await pool.query(
+      `SELECT tier, tier_expires_at FROM users WHERE firebase_uid = $1 LIMIT 1`,
+      [firebaseUid],
+    );
+
+    expect(paymentResult.rowCount).toBe(1);
+    expect(paymentResult.rows[0].status).toBe("paid");
+    expect(paymentResult.rows[0].paid_at).toBeTruthy();
+
+    expect(userResult.rowCount).toBe(1);
+    expect(userResult.rows[0].tier).toBe("premium");
+    expect(userResult.rows[0].tier_expires_at).toBeTruthy();
+
+    const tierExpiry = new Date(String(userResult.rows[0].tier_expires_at));
+    const minExpected = new Date(beforeMutation.getTime() + 29 * 24 * 60 * 60 * 1000);
+    const maxExpected = new Date(afterMutation.getTime() + 31 * 24 * 60 * 60 * 1000);
+    expect(tierExpiry.getTime()).toBeGreaterThanOrEqual(minExpected.getTime());
+    expect(tierExpiry.getTime()).toBeLessThanOrEqual(maxExpected.getTime());
+  });
+
+  it("does not apply paid mutation twice for already-paid transaction", async () => {
+    const paymentRepository = new PostgresPaymentTransactionRepository(pool);
+    const executor = new PostgresWebhookMutationExecutor(pool, paymentRepository);
+
+    const firebaseUid = "uid_integration_paid_2";
+    const orderCode = 770002;
+    const initialExpiry = new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString();
+
+    await pool.query(
+      `INSERT INTO users(firebase_uid, tier, tier_expires_at) VALUES ($1, 'premium', $2)`,
+      [firebaseUid, initialExpiry],
+    );
+    await pool.query(
+      `INSERT INTO payment_transactions(firebase_uid, order_code, amount, plan_type, status, expires_at, paid_at)
+       VALUES ($1, $2, $3, $4, 'paid', NOW() + INTERVAL '15 minutes', NOW())`,
+      [firebaseUid, orderCode, 99000, "premium_monthly"],
+    );
+
+    await executor.runInTransaction((tx) =>
+      executor.applyEventWithinTransaction(
+        {
+          provider: "payos",
+          eventId: "evt_paid_mutation_twice",
+          eventType: "payment.updated",
+          transactionId: String(orderCode),
+          rawBody: "{}",
+          payload: { status: "PAID", data: { orderCode } },
+        },
+        tx,
+      ),
+    );
+
+    const paymentResult = await pool.query(
+      `SELECT status FROM payment_transactions WHERE order_code = $1 LIMIT 1`,
+      [orderCode],
+    );
+    const userResult = await pool.query(
+      `SELECT tier_expires_at FROM users WHERE firebase_uid = $1 LIMIT 1`,
+      [firebaseUid],
+    );
+
+    expect(paymentResult.rowCount).toBe(1);
+    expect(paymentResult.rows[0].status).toBe("paid");
+    expect(new Date(String(userResult.rows[0].tier_expires_at)).toISOString()).toBe(initialExpiry);
   });
 
   it("writes transaction-not-found audit log", async () => {
