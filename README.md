@@ -47,12 +47,32 @@ docs/
 - Node.js 22+
 - pnpm 10+
 - Docker + Docker Compose
+- PostgreSQL (cho entitlement runtime của API)
+- Redis (cho quota runtime của API)
 
-## Install
+## Environment variables (API)
+
+`apps/api` dùng các biến môi trường sau ở non-test runtime:
+
+- `DATABASE_URL`: PostgreSQL connection string
+- `REDIS_URL`: Redis connection string
+
+Ví dụ:
 
 ```bash
-pnpm install
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/metascope
+REDIS_URL=redis://localhost:6379
 ```
+
+Schema tối thiểu hiện cần ở bảng `users`:
+
+- `firebase_uid` (unique)
+- `tier` (`basic` | `premium`)
+- `tier_expires_at` (nullable timestamp)
+
+Trong test mode (`NODE_ENV=test`), API dùng in-memory entitlement/quota store.
+
+Xem decision note: `docs/decisions/DEC-20260521-api-entitlement-quota-runtime-deps.md`.
 
 ## Run locally (without Docker)
 
@@ -60,6 +80,18 @@ Chạy tất cả app ở mode development:
 
 ```bash
 pnpm run dev
+```
+
+Chạy riêng API (có env runtime):
+
+```bash
+pnpm --filter @metascope/api run dev
+```
+
+## Install
+
+```bash
+pnpm install
 ```
 
 ## Run with Docker

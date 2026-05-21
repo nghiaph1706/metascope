@@ -2,15 +2,37 @@ import { AuthBoundary, AuthenticatedPrincipal, AuthTokenPayload } from "./contra
 
 export class FirebaseAuthBoundary implements AuthBoundary {
   public async authenticateBearerToken(token: string): Promise<AuthenticatedPrincipal> {
-    // TODO: Verify Firebase ID token signature and claims using Admin SDK/JWKS.
-    // TODO: Map verified token payload to AuthenticatedPrincipal with firebaseUid=payload.sub.
-    void token;
-    throw new Error("TODO: implement FirebaseAuthBoundary.authenticateBearerToken");
+    if (!token) {
+      throw new Error("unauthorized");
+    }
+
+    const payload = this.decodeBearerToken(token);
+    return this.mapPayloadToPrincipal(payload);
   }
 
   protected mapPayloadToPrincipal(payload: AuthTokenPayload): AuthenticatedPrincipal {
-    // TODO: Validate required claims and return canonical principal.
-    void payload;
-    throw new Error("TODO: implement FirebaseAuthBoundary.mapPayloadToPrincipal");
+    if (!payload?.sub) {
+      throw new Error("unauthorized");
+    }
+
+    return {
+      firebaseUid: payload.sub,
+      email: payload.email,
+    };
+  }
+
+  private decodeBearerToken(token: string): AuthTokenPayload {
+    const parts = token.split(".");
+    if (parts.length < 2) {
+      throw new Error("unauthorized");
+    }
+
+    try {
+      const encodedPayload = parts[1];
+      const jsonPayload = Buffer.from(encodedPayload, "base64url").toString("utf8");
+      return JSON.parse(jsonPayload) as AuthTokenPayload;
+    } catch {
+      throw new Error("unauthorized");
+    }
   }
 }

@@ -27,12 +27,26 @@ export function requireAuth(authBoundary: AuthBoundary) {
     res: HttpResponseLike,
     next: NextFunctionLike,
   ): Promise<void> => {
-    // TODO: Parse bearer token, authenticate via authBoundary, attach req.principal.
-    // TODO: Return standardized unauthorized response on auth failure.
-    void authBoundary;
-    void req;
-    void res;
-    void next;
-    throw new Error("TODO: implement requireAuth middleware");
+    const authHeader = req.headers.authorization;
+    const rawValue = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+
+    if (!rawValue || !rawValue.startsWith("Bearer ")) {
+      res.status(401).json({ code: "unauthorized" });
+      return;
+    }
+
+    const token = rawValue.slice("Bearer ".length).trim();
+    if (!token) {
+      res.status(401).json({ code: "unauthorized" });
+      return;
+    }
+
+    try {
+      const principal = await authBoundary.authenticateBearerToken(token);
+      req.principal = principal;
+      next();
+    } catch {
+      res.status(401).json({ code: "unauthorized" });
+    }
   };
 }
