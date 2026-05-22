@@ -1,0 +1,9 @@
+[Unit]
+Description=MetaScope Goal-All Watchdog
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/metascope/goal-all.env
+ExecStart=/bin/bash /opt/metascope/scripts/vps/watchdog.sh

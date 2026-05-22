@@ -5,6 +5,7 @@
 MetaScope là nền tảng hỗ trợ người chơi TFT, triển khai theo hướng **backend-focused TypeScript monorepo**.
 
 Phạm vi sản phẩm chính:
+
 - Meta library: comps/champions/traits/items/roll odds/patch notes.
 - Player stats (yêu cầu auth).
 - AI tools: Elo Predictor, Post-Game Analysis, Matchup Coach (Premium).
@@ -13,10 +14,12 @@ Phạm vi sản phẩm chính:
 - Entitlement/quota enforcement server-side.
 
 Mô hình vận hành:
+
 - Frontend là trải nghiệm người dùng.
 - Backend là source of truth cho identity, entitlement, quota, billing state.
 
 **Out of scope tuyệt đối:**
+
 - MUST NOT implement Live Tracker (đã loại do rate-limit/bottleneck risk).
 
 ---
@@ -24,17 +27,22 @@ Mô hình vận hành:
 ## 2) Sources of Truth
 
 Nguồn sự thật chức năng:
+
 - Primary PRD: `specs/README.md` (đã được chia nhỏ thành các file).
-- Quyết định/chỉnh sửa bổ sung hiện có: `notes.html`.
+- Quyết định/chỉnh sửa bổ sung hiện hành: `docs/decisions/*.md`.
+- `notes.html` chỉ là legacy reference, không phải nguồn authority mới.
 
 Nguồn sự thật vận hành nội bộ:
+
 - Agents: `.claude/agents/`.
 - Commands: `.claude/commands/`.
 
 Tài liệu nên chuẩn hóa dần sang markdown:
+
 - Khuyến nghị đặt tại `docs/` (xem mục 9).
 
 Quy tắc ra quyết định:
+
 - Khi thiếu thông tin, MUST ưu tiên PRD + decision notes.
 - MUST NOT tự suy đoán business rules nếu chưa có nguồn xác nhận.
 
@@ -43,6 +51,7 @@ Quy tắc ra quyết định:
 ## 3) Architecture Guardrails
 
 ### MUST
+
 - MUST dùng **Firebase UID** làm auth identity canonical.
 - MUST enforce entitlement/quota ở backend theo PRD (section 5.5).
 - MUST treat frontend tier/quota chỉ là hiển thị, không phải authority.
@@ -53,12 +62,14 @@ Quy tắc ra quyết định:
 - MUST tuân thủ Riot ToS và policy liên quan dữ liệu/mức truy cập.
 
 ### MUST NOT
+
 - MUST NOT cấp premium/quota từ client state.
 - MUST NOT cấp entitlement dựa trên payment returnUrl/client callback.
 - MUST NOT đề xuất workaround vi phạm Riot ToS.
 - MUST NOT implement Live Tracker.
 
 ### Data/backend orientation
+
 - PostgreSQL: transactional source of truth.
 - Redis: quota counters, fast state, atomic scripts.
 - OpenSearch: search/read model phased rollout.
@@ -68,20 +79,23 @@ Quy tắc ra quyết định:
 ## 4) Repo Structure
 
 Thư mục quan trọng:
+
 - `.claude/agents/`: định nghĩa specialist agents.
 - `.claude/commands/`: command workflows để điều phối agents.
 - `.claude/agent-memory/`: dữ liệu hỗ trợ ngữ cảnh cho agent workflows.
 - `.claude/worktrees/`: vùng làm việc tách biệt khi chạy agent/worktree.
 - `specs/`: product specifications (PRD chính).
 - `base-template/src/`: UI seed/foundation cho frontend.
-- `notes.html`: decision/change notes hiện hữu cần migrate dần.
+- `notes.html`: legacy notes, chỉ dùng tham chiếu lịch sử khi chưa migrate.
 
 Vai trò `base-template/src/`:
+
 - Foundation cho views/components/routes ban đầu.
 - Chứa mock/static data để bootstrap UI.
 - Là điểm xuất phát để wire API thật theo PRD.
 
 Khuyến nghị vị trí tài liệu chuẩn hóa:
+
 - `docs/decisions/`
 - `docs/progress/`
 - `docs/tasks/`
@@ -98,6 +112,7 @@ Khuyến nghị vị trí tài liệu chuẩn hóa:
 - Frontend MUST NOT tự tính entitlement/quota như quyết định cuối cùng.
 
 Phase khuyến nghị:
+
 1. Scaffold views + route skeleton.
 2. Wire API layer theo contract.
 3. Gắn auth và tier gates.
@@ -108,6 +123,7 @@ Phase khuyến nghị:
 ## 6) Agent Workflow
 
 ### A. Spec / analysis / planning
+
 - `spec-clarifier`
 - `spec-consistency-checker`
 - `acceptance-criteria-converter`
@@ -121,12 +137,14 @@ Phase khuyến nghị:
 Dùng khi: scope mơ hồ, cần làm rõ logic, chuyển spec thành task/AC/checklist.
 
 ### B. Orchestration
+
 - `spec-reviewer-orchestrator`
 - `spec-workflow-orchestrator`
 
 Dùng khi: cần review spec end-to-end hoặc chạy full spec-to-planning workflow.
 
 ### C. Implementation / review
+
 - `senior-architect`
 - `senior-scaffolder`
 - `junior-implementer`
@@ -137,6 +155,7 @@ Dùng khi: cần review spec end-to-end hoặc chạy full spec-to-planning work
 Dùng khi: bắt đầu coding, scaffold, implement, kiểm integration, quality gate cuối.
 
 ### D. Docs / CI / Ops / Async
+
 - `docs-librarian`
 - `ci-helper`
 - `ops-notes-keeper`
@@ -145,6 +164,7 @@ Dùng khi: bắt đầu coding, scaffold, implement, kiểm integration, quality
 Dùng khi: chống docs drift, sửa CI/CD, ghi incident/decision notes, nén trạng thái & xin quyết định async.
 
 Quy tắc chung:
+
 - Specialist agents bổ trợ nhau, không thay thế lẫn nhau.
 - Chọn agent theo loại vấn đề, không dùng 1 agent cho mọi việc.
 
@@ -153,6 +173,7 @@ Quy tắc chung:
 ## 7) Command Workflow
 
 ### Spec workflow commands
+
 - `review-spec`
 - `challenge-feature`
 - `spec-to-ac`
@@ -162,6 +183,7 @@ Quy tắc chung:
 - `next-implementation-slice`
 
 ### Task execution commands
+
 - `design-task`
 - `scaffold-task`
 - `implement-task`
@@ -169,11 +191,13 @@ Quy tắc chung:
 - `execute-task-full`
 
 ### Async work management commands
+
 - `work-status`
 - `request-decision`
 - `log-progress`
 
 Recommended flows:
+
 - Spec chưa rõ: `spec-review-full` → `plan-from-spec`.
 - Chuẩn bị coding: `design-task` → `scaffold-task`.
 - Thực thi E2E: `implement-task` hoặc `execute-task-full`.
@@ -181,6 +205,7 @@ Recommended flows:
 - Workflow dài/remote: dùng bộ `work-status` / `request-decision` / `log-progress`.
 
 Ví dụ lệnh:
+
 - `/spec-review-full specs/README.md`
 - `/plan-from-spec specs/README.md`
 - `/design-task <task-scope>`
@@ -196,15 +221,18 @@ Ví dụ lệnh:
 Project hỗ trợ điều phối công việc dài và theo dõi từ xa qua Channels.
 
 Nguyên tắc:
+
 - Claude có thể chạy tác vụ dài, nhưng luôn **human-in-the-loop**.
 - Không coi async workflow là fully autonomous không kiểm soát.
 
 Dùng command:
+
 - `work-status`: nén trạng thái hiện tại, blockers, decision points.
 - `request-decision`: đóng gói câu hỏi ngắn, dạng yes/no hoặc A/B/C.
 - `log-progress`: checkpoint tiến độ, mốc đã hoàn tất, bước kế tiếp.
 
 Khi có blocker:
+
 - Escalate sớm bằng `request-decision` thay vì tự đoán và tiếp tục sai hướng.
 
 ---
@@ -212,17 +240,20 @@ Khi có blocker:
 ## 9) Documentation, Decisions, and Progress
 
 Vai trò agents:
+
 - `docs-librarian`: chuẩn hóa/cập nhật docs, giữ docs đồng bộ implementation.
 - `ops-notes-keeper`: ghi decision log, incident notes, operational context.
 - `work-manager`: nén trạng thái, đề nghị quyết định ngắn gọn khi chạy async.
 
 Khuyến nghị cấu trúc tài liệu:
+
 - `docs/decisions/DEC-YYYYMMDD-<slug>.md`
 - `docs/progress/YYYY-MM-DD.md`
 - `docs/tasks/<epic-or-scope>.md`
 - `<package>/README.md` cho intent, boundaries, entrypoints.
 
 Yêu cầu bảo trì:
+
 - MUST cập nhật docs khi thay đổi kiến trúc, workflow, contract hoặc guardrail.
 - MUST migrate dần nội dung hữu ích từ `notes.html` sang markdown có cấu trúc.
 
@@ -231,6 +262,7 @@ Yêu cầu bảo trì:
 ## 10) Implementation Rules
 
 Chuỗi trách nhiệm:
+
 1. `senior-architect`: chốt architecture/module boundaries/contracts.
 2. `senior-scaffolder`: scaffold file/function skeleton theo kiến trúc đã duyệt.
 3. `junior-implementer`: implement logic trong khung đã duyệt.
@@ -238,6 +270,7 @@ Chuỗi trách nhiệm:
 5. `senior-reviewer`: quality gate cuối trước khi kết luận done.
 
 Ràng buộc:
+
 - `junior-implementer` MUST NOT tự đổi contract/public API chưa được duyệt.
 - Nếu contract mơ hồ hoặc conflict spec, MUST dừng và escalate làm rõ.
 - MUST NOT “đoán” business rule để đi tiếp.
@@ -249,6 +282,7 @@ Ràng buộc:
 Thay đổi liên quan auth/quota/premium/payment/entitlement MUST có test phù hợp.
 
 Tối thiểu cần bao phủ:
+
 - Auth identity mapping với Firebase UID.
 - Entitlement checks theo tier + expiry.
 - Quota behavior (reset window, limit reached, atomic update).
@@ -256,6 +290,7 @@ Tối thiểu cần bao phủ:
 - Payment webhook signature verification + idempotent grant.
 
 CI/CD:
+
 - `ci-helper` là agent chính cho pipeline/scripts CI/CD.
 - Khi sửa CI, MUST tránh thay business logic nếu không thực sự cần.
 
@@ -264,15 +299,18 @@ CI/CD:
 ## 12) Practical Conventions
 
 Ngôn ngữ làm việc:
+
 - Trao đổi với user/team (trong ngữ cảnh nội bộ VN): tiếng Việt.
 - Code/comments/technical identifiers: tiếng Anh.
 
 Phong cách output:
+
 - Concise.
 - Structured.
 - Actionable.
 
 Khi tạo plan/task/checklist, nên luôn có:
+
 - Scope.
 - Done criteria.
 - Blocker/risk.
@@ -283,6 +321,7 @@ Khi tạo plan/task/checklist, nên luôn có:
 ## 13) Open Gaps / Recommended Next Docs
 
 Các khoảng trống nên ưu tiên bổ sung (nếu chưa có hoặc chưa đầy đủ):
+
 - Package-level README cho modules chính (api, workers, web).
 - `docs/decisions/` để thay dần `notes.html`.
 - `docs/progress/` cho daily/weekly checkpoints.
