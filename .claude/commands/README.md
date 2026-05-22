@@ -2,20 +2,12 @@
 
 ## Cách cài đặt
 
-Copy toàn bộ file commands vào `.claude/commands/` trong root repo:
+Các command đã được đặt sẵn trong `.claude/commands/` của repo này.
+
+Nếu cần đồng bộ sang repo khác, copy trực tiếp từ thư mục hiện tại:
 
 ```bash
-cp docs/goals/commands/*.md .claude/commands/
-```
-
-Hoặc từng file:
-
-```bash
-cp docs/goals/commands/goal-be.md   .claude/commands/goal-be.md
-cp docs/goals/commands/goal-fe.md   .claude/commands/goal-fe.md
-cp docs/goals/commands/goal-cms.md  .claude/commands/goal-cms.md
-cp docs/goals/commands/goal-infra.md .claude/commands/goal-infra.md
-cp docs/goals/commands/goal-all.md  .claude/commands/goal-all.md
+cp .claude/commands/goal-*.md <target-repo>/.claude/commands/
 ```
 
 ---
@@ -65,12 +57,12 @@ INFRA → BE → CMS → FE
 
 ## Goal files tham chiếu
 
-Mỗi command đọc goal file tương ứng trong `docs/goals/`:
+Mỗi command đọc goal file tương ứng trong `specs/goals/`:
 
-| Command       | Goal file                      | Progress file                              |
-| ------------- | ------------------------------ | ------------------------------------------ |
-| `/goal-be`    | `docs/goals/GOAL_BE.md`        | `docs/progress/be-goal-progress.md`        |
-| `/goal-fe`    | `docs/goals/GOAL_FE.md`        | `docs/progress/fe-goal-progress.md`        |
-| `/goal-cms`   | `docs/goals/GOAL_CMS_ADMIN.md` | `docs/progress/cms-admin-goal-progress.md` |
-| `/goal-infra` | `docs/goals/GOAL_INFRA.md`     | `docs/progress/infra-goal-progress.md`     |
-| `/goal-all`   | Tất cả                         | `docs/progress/all-goals-status.md`        |
+| Command       | Goal file                       | Progress file                              |
+| ------------- | ------------------------------- | ------------------------------------------ |
+| `/goal-be`    | `specs/goals/GOAL_BE.md`        | `docs/progress/be-goal-progress.md`        |
+| `/goal-fe`    | `specs/goals/GOAL_FE.md`        | `docs/progress/fe-goal-progress.md`        |
+| `/goal-cms`   | `specs/goals/GOAL_CMS_ADMIN.md` | `docs/progress/cms-admin-goal-progress.md` |
+| `/goal-infra` | `specs/goals/GOAL_INFRA.md`     | `docs/progress/infra-goal-progress.md`     |
+| `/goal-all`   | Tất cả                          | `docs/progress/all-goals-status.md`        |
